@@ -47,7 +47,7 @@ case $1 in
     init NJU-ProjectN/fceux-am ics2021 fceux-am false
     ;;
   am-kernels)
-    init NJU-ProjectN/am-kernels ics2021 am-kernels false
+    init NJU-ProjectN/am-kernels ics2021 am-kernels true
     ;;
   nanos-lite)
     init NJU-ProjectN/nanos-lite ics2021 nanos-lite true
