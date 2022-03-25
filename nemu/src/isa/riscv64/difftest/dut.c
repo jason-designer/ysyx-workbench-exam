@@ -4,7 +4,7 @@
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool res = true;
-	if(ref_r->pc != pc) {
+	if(ref_r->pc != cpu.pc) {
 		printf("pc different after executing inst at pc = %lx , right = %lx  wrong = %lx  \n", pc, ref_r->pc, pc);
 		res=false;
 	}
