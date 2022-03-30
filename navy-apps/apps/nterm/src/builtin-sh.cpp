@@ -22,7 +22,13 @@ static void sh_prompt() {
   sh_printf("sh> ");
 }
 
+//注意cmd是"/bin/menu\n",它多了个\n，要去掉并改成\0
 static void sh_handle_cmd(const char *cmd) {
+  char cmdbuf[100];
+  int i;
+  for(i = 0; cmd[i] != '\n'; i++) cmdbuf[i] = cmd[i];
+  cmdbuf[i] = '\0';
+  execve(cmdbuf, NULL, NULL);
 }
 
 void builtin_sh_run() {

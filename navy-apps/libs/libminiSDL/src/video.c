@@ -3,16 +3,70 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+#include <malloc.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+  uint32_t* dp = (uint32_t*)dst->pixels;
+  uint32_t* sp = (uint32_t*)src->pixels;
+  int dx, dy, dw, dh, sx, sy, sw, sh;
+  if(dstrect != NULL && srcrect != NULL){
+    dx = dstrect->x; dy = dstrect->y; dw = dstrect->w; dh = dstrect->h;
+    sx = srcrect->x; sy = srcrect->y; sw = srcrect->w; sh = srcrect->h;
+  }
+  else if(dstrect != NULL && srcrect == NULL){
+    dx = dstrect->x; dy = dstrect->y; dw = src->w; dh = src->h;
+    sx = 0; sy = 0; sw = src->w; sh = src->h;
+  }
+  else if(dstrect == NULL && srcrect != NULL){
+    dx = 0; dy = 0; dw = dst->w; dh = dst->h;
+    sx = srcrect->x; sy = srcrect->y; sw = dst->w; sh = dst->h;
+  }
+  else{
+    dx = 0; dy = 0; dw = dst->w; dh = dst->h;
+    sx = 0; sy = 0; sw = src->w; sh = src->h;
+  }
+  // printf("%d %d %d %d\n %d %d %d %d\n",dx,dy,dw,dh,sx,sy,sw,sh);
+  // printf("src");
+  assert(sw == dw && sh == dh);
+  int i, j;
+  for(j = 0; j < sh; j++){
+    for(i = 0; i < sw; i++){
+      dp[(dx + i) + dst->w * (dy + j)] = sp[(sx + i) + src->w * (sy + j)];
+    }
+  }
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  int x, y, w, h;
+  if(dstrect == NULL){
+    x = 0;
+    y = 0;
+    w = dst->w;
+    h = dst->h;
+  }
+  else{
+    x = dstrect->x;
+    y = dstrect->y;
+    w = dstrect->w;
+    h = dstrect->h;
+  }
+  int i, j;
+  uint32_t* p = (uint32_t*)dst->pixels;
+  for(j = y; j < (y + h); j++){
+    for(i = x; i < (x + w); i++) p[i + j * w] = color;
+  }
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  //assert(0);
+  uint32_t * p = (uint32_t *)s->pixels;
+  NDL_OpenCanvas(&(s->w), &(s->h));
+  if(x ==0 && y ==0 && w ==0 && h ==0) NDL_DrawRect(p, 0, 0, s->w, s->h);
+  else NDL_DrawRect(p, x, y, w, h);
 }
 
 // APIs below are already implemented.
@@ -193,8 +247,10 @@ uint32_t SDL_MapRGBA(SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint
 }
 
 int SDL_LockSurface(SDL_Surface *s) {
+  assert(0);
   return 0;
 }
 
 void SDL_UnlockSurface(SDL_Surface *s) {
+  assert(0);
 }

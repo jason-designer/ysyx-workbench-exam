@@ -109,6 +109,44 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                       *s = p;
                     }
                     break;
+          case '0' ... '9':
+                    {
+                      int fchar = ' ', fwidth, ftype;
+                      if(*(f+1) >= '0' && *(f+1) <= '9'){
+                        fchar = *f;
+                        fwidth = *++f - '0';
+                        ftype = *++f;
+                      }
+                      else{
+                        fwidth = *f - '0';
+                        ftype = *++f;
+                      }
+                      //
+                      switch(ftype){
+                        case 'd':
+                                  {
+                                    char buf[32];
+                                    n = _itoa(va_arg(ap,int),buf);
+                                    if(n < fwidth){
+                                      char buf2[fwidth];
+                                      for(int i = 0; i < fwidth; i++){
+                                        if(i < (fwidth - n)) buf2[i] = fchar;
+                                        else buf2[i] = buf[i - fwidth + n];
+                                      }
+                                      n = fwidth;
+                                      memcpy(s,buf2,n);
+                                    }
+                                    else memcpy(s,buf,n);
+                                  }
+                                  break;
+                        default : 
+                                  {
+                                    printf("%c\n",ftype);
+                                    assert(0);
+                                  }
+                      }
+                    }
+                    break;
           default:
                     {
 											printf("%c\n",*f);
@@ -120,7 +158,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
     ++f;
     s+=n;
   }
-  *s=0;
+  *s='\0'; // /0的asic值就是0
   return s-out;
 }
 

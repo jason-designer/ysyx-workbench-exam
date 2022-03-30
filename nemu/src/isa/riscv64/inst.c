@@ -2,6 +2,7 @@
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
+#include <cpu/difftest.h>
 
 #define R(i) gpr(i)
 #define Mr vaddr_read
@@ -58,6 +59,24 @@ word_t zext(word_t x, int y){
     case 4: return (uint64_t)x;
     case 8: return x;
     default: assert(0);
+  }
+}
+word_t read_csr(word_t addr){
+  switch(addr){
+    case 0x305: return cpu.mtvec;
+    case 0x341: return cpu.mepc;
+    case 0x300: return cpu.mstatus;
+    case 0x342: return cpu.mcause;
+    default : Log("unknown csr read"); assert(0); 
+  }
+}
+void write_csr(word_t addr, word_t data){
+  switch(addr){
+    case 0x305: cpu.mtvec = data; break;
+    case 0x341: cpu.mepc = data; break;
+    case 0x300: cpu.mstatus = data; break;
+    case 0x342: cpu.mcause = data; break;
+    default : Log("unknown csr write"); assert(0);
   }
 }
 
@@ -143,6 +162,12 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu   , R, R(dest) = src1 % src2; );
   INSTPAT("0000001 ????? ????? 110 ????? 01110 11", remw   , R, R(dest) = sext((int32_t)src1 % (int32_t)src2, 4); );
   INSTPAT("0000001 ????? ????? 111 ????? 01110 11", remuw  , R, R(dest) = sext((uint32_t)src1 % (uint32_t)src2, 4); );
+  //csr
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, s->dnpc = isa_raise_intr(cpu.gpr[17], cpu.pc); difftest_skip_ref(); );
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, word_t t = read_csr(src2); write_csr(src2, src1);  R(dest) = t; );
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, word_t t = read_csr(src2); write_csr(src2, t | src1);  R(dest) = t; difftest_skip_ref(); );
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , R, s->dnpc = read_csr(0x341) + 4; difftest_skip_ref(); );
+
 
   //other
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0

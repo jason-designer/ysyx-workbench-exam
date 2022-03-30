@@ -17,9 +17,10 @@ void isa_reg_display() {
     printf("0x%016lx  ",cpu.gpr[i]);
     if(i%4==3) printf("\n");
   }
-	// printf("mcause:%016lx\n",mcause);
-	// printf("mstatus:%016lx\n",mstatus);
-	// printf("mepc:%016lx\n",mepc);
+  printf("mtvec  :%016lx\n",cpu.mtvec);
+  printf("mepc   :%016lx\n",cpu.mepc);
+  printf("mstatus:%016lx\n",cpu.mstatus);
+	printf("mcause :%016lx\n",cpu.mcause);
   return;
 }
 
