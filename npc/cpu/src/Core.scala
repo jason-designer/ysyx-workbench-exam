@@ -29,7 +29,8 @@ class Core extends Module{
 
   ieu.io.op1 := idu.io.op1
   ieu.io.op2 := idu.io.op2
-  ieu.io.op3 := idu.io.op3
+  ieu.io.pc  := ifu.io.pc
+  ieu.io.imm := idu.io.imm
 
   rfu.io.rs1_en   := idu.io.rs1_en
   rfu.io.rs2_en   := idu.io.rs2_en
@@ -45,7 +46,7 @@ class Core extends Module{
   val halt = Module(new Halt)
   halt.io.clk   := clock
   halt.io.reset := reset
-  halt.io.halt  := ifu.io.inst === EBREAK
+  halt.io.halt  := ifu.io.inst === EBREAK || ifu.io.inst === "h0000006b".U
 
 }
 

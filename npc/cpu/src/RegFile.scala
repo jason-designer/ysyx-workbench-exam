@@ -38,8 +38,8 @@ class RegFile extends BlackBox with HasBlackBoxInline{
            |  reg [63:0] rf [0:31];
            |  initial set_gpr_ptr(rf);  // rf为通用寄存器的二维数组变量
            |
-           |  assign rs1_data = (rs1_en || rs1_addr == 5'b0) ? 64'b0 : rf[rs1_addr];
-           |  assign rs2_data = (rs2_en || rs2_addr == 5'b0) ? 64'b0 : rf[rs2_addr];
+           |  assign rs1_data = (!rs1_en || rs1_addr == 5'b0) ? 64'b0 : rf[rs1_addr];
+           |  assign rs2_data = (!rs2_en || rs2_addr == 5'b0) ? 64'b0 : rf[rs2_addr];
            |
            |  always @(posedge clk) begin
            |    if (reset) begin 
@@ -48,7 +48,7 @@ class RegFile extends BlackBox with HasBlackBoxInline{
            |        rf[i] <= 64'b0;
            |      end
            |    end else begin
-           |      rf[rd_addr] <= rd_en ? rd_addr == 5'b0 ? 64'b0 : rd_data : rf[rd_addr]; 
+           |      rf[rd_addr] <= rd_en ? (rd_addr == 5'b0 ? 64'b0 : rd_data) : rf[rd_addr]; 
            |    end
            |  end
            |endmodule

@@ -2,9 +2,9 @@
     "value": [
         {
             "analysisFile": "/home/zgs/project/ysyx-workbench/npc/out/cpu/compile/dest/zinc",
-            "classes": "ref:af081fc4:/home/zgs/project/ysyx-workbench/npc/out/cpu/compile/dest/classes"
+            "classes": "ref:8bebe92c:/home/zgs/project/ysyx-workbench/npc/out/cpu/compile/dest/classes"
         }
     ],
-    "valueHash": -876250285,
-    "inputsHash": 220738128
+    "valueHash": -412414786,
+    "inputsHash": 17875121
 }

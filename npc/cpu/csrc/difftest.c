@@ -71,12 +71,12 @@ bool difftest_step(uint64_t pc) {
 bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc) {
   bool res = true;
 	if(ref_r->pc != cpu.pc) {
-		printf("pc different after executing inst at pc = %lx , right = %lx  wrong = %lx  \n", pc, ref_r->pc, cpu.pc);
+		Logc(ASNI_FG_RED,"pc different after executing inst at pc = %lx , right = %lx  wrong = %lx  \n", pc, ref_r->pc, cpu.pc);
 		res=false;
 	}
 	for(int i=0;i<32;i++){
 		if(ref_r->gpr[i] != cpu.gpr[i]){
-			printf("gpr[%2d] different after executing inst at pc = %lx , right = %lx  wrong = %lx  \n", i, pc, ref_r->gpr[i], cpu.gpr[i]);
+			Logc(ASNI_FG_RED,"gpr[%2d] different after executing inst at pc = %lx , right = %lx  wrong = %lx  \n", i, pc, ref_r->gpr[i], cpu.gpr[i]);
 			res=false;
 		}
 	}

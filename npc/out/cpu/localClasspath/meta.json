@@ -1,8 +1,8 @@
 {
     "value": [
         "ref:c984eca8:/home/zgs/project/ysyx-workbench/npc/cpu/resources",
-        "ref:af081fc4:/home/zgs/project/ysyx-workbench/npc/out/cpu/compile/dest/classes"
+        "ref:8bebe92c:/home/zgs/project/ysyx-workbench/npc/out/cpu/compile/dest/classes"
     ],
-    "valueHash": -2041090082,
-    "inputsHash": 873370815
+    "valueHash": 1697856825,
+    "inputsHash": 976482269
 }

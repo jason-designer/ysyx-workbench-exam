@@ -3,8 +3,11 @@ import chisel3.util._
 import Instructions._
 
 class DecodeInfo extends Bundle{
-    val fu_code = Output(UInt())
+    val fu_code  = Output(UInt())
     val alu_code = Output(UInt())
+    val bu_code  = Output(UInt())
+    val lu_code  = Output(UInt())
+    val su_code  = Output(UInt())
 }
 class Decode extends Module{
     val io = IO(new Bundle{
@@ -24,33 +27,123 @@ class Decode extends Module{
 
         val op1 = Output(UInt(64.W))
         val op2 = Output(UInt(64.W))
-        val op3 = Output(UInt(64.W))
+        val imm = Output(UInt(64.W))
     })
     val inst = io.inst
 
     //get inst
-    val addi = inst === ADDI
+    //shifts
+    val sll = inst === SLL
+    val srl = inst === SRL
+    val sra = inst === SRA
+    val slli = inst === SLLI
+    val srli = inst === SRLI
+    val srai = inst === SRAI
+    val sllw = inst === SLLW
+    val srlw = inst === SRLW
+    val sraw = inst === SRAW
+    val slliw = inst === SLLIW
+    val srliw = inst === SRLIW
+    val sraiw = inst === SRAIW
+    //arithmetic
+    val add     = inst === ADD
+    val addw    = inst === ADDW
+    val addi    = inst === ADDI
+    val addiw   = inst === ADDIW
+    val sub     = inst === SUB
+    val subw    = inst === SUBW
+    val lui     = inst === LUI
+    val auipc   = inst === AUIPC
+    //logical
+    val xor     = inst === XOR
+    val or      = inst === OR
+    val and     = inst === AND
+    val xori    = inst === XORI
+    val ori     = inst === ORI
+    val andi    = inst === ANDI
+    //compare
+    val slt     = inst === SLT
+    val sltu    = inst === SLTU
+    val slti    = inst === SLTI
+    val sltiu   = inst === SLTIU
+    //branches
+    val beq     = inst === BEQ
+    val bne     = inst === BNE
+    val blt     = inst === BLT
+    val bge     = inst === BGE
+    val bltu    = inst === BLTU
+    val bgeu    = inst === BGEU
+    //jump
+    val jal     = inst === JAL
+    val jalr    = inst === JALR
+    //load
+    val lb      = inst === LB
+    val lh      = inst === LH
+    val lw      = inst === LW
+    val ld      = inst === LD
+    val lbu     = inst === LBU
+    val lhu     = inst === LHU
+    val lwu     = inst === LWU
+    //save
+    val sb      = inst === SB
+    val sh      = inst === SH
+    val sw      = inst === SW
+    val sd      = inst === SD
 
-
-    //get fu_code
+    //---------------------------------------get fu_code
     //alu
-    val alu_add = addi
-    val alu_code = addi
-    val alu_en = alu_code =/= 0.U
+    val alu_add   = add || addi || lui
+    val alu_addw  = addw || addiw
+    val alu_sub   = sub
+    val alu_subw  = subw
+    val alu_auipc = auipc
 
-    val fu_code = Cat(alu_en)
+    val alu_sll   = sll  || slli
+    val alu_srl   = srl  || srli
+    val alu_sra   = sra  || srai
+    val alu_sllw  = sllw || slliw
+    val alu_srlw  = srlw || srliw
+    val alu_sraw  = sraw || sraiw
 
+    val alu_xor   = xor  || xori
+    val alu_or    = or   || ori
+    val alu_and   = and  || andi
 
-    //get inst type
-    val type_r = false.B
-    val type_i = addi
-    val type_s = false.B
-    val type_b = false.B
-    val type_u = false.B
-    val type_j = false.B
+    val alu_slt   = slt  || slti
+    val alu_sltu  = sltu || sltiu
+
+    val alu_code = Cat(alu_sltu, alu_slt, alu_and, alu_or, alu_xor, alu_sraw, alu_srlw, alu_sllw, alu_sra, alu_srl, alu_sll, alu_auipc, alu_subw, alu_sub, alu_addw, alu_add)
+    val alu_en   = alu_code =/= 0.U
+    //bu
+    val bu_code = Cat(jalr, jal, bgeu, bltu, bge, blt, bne, beq)
+    val bu_en   = bu_code =/= 0.U
+    //lu
+    val lu_code = Cat(lwu, lhu, lbu, ld, lw, lh, lb)
+    val lu_en   = lu_code =/= 0.U
+    //su
+    val su_code = Cat(sd, sw, sh, sb)
+    val su_en   = su_code =/= 0.U
+    //fu_code
+    val fu_code = Cat(su_en, lu_en, bu_en, alu_en)
+
+    //----------------------------------------get inst type
+    val type_r =    sll  || srl   || sra  || sllw  || srlw  || sraw  ||
+                    add  || addw  || sub  || subw  ||
+                    xor  || or    || and  ||
+                    slt  || sltu  ||
+                    jalr 
+    val type_i =    slli || srli  || srai || slliw || srliw || sraiw ||
+                    addi || addiw ||
+                    xori || ori   || andi ||
+                    slti || sltiu ||
+                    lb   || lh    || lw   || ld    || lbu   || lhu   || lwu 
+    val type_s =    sb   || sh    || sw   || sd
+    val type_b =    beq  || bne   || blt  || bge   || bltu  || bgeu
+    val type_u =    lui  || auipc 
+    val type_j =    jal
     val inst_type = Cat(type_r, type_i, type_s, type_b, type_u, type_j)
 
-    //get imm
+    //-------------------------------------------get imm
     val imm_r = 0.U
     val imm_i = Cat(Fill(52, inst(31)), inst(31, 20))
     val imm_s = Cat(Fill(52, inst(31)), inst(31, 25), inst(11, 7))
@@ -66,10 +159,12 @@ class Decode extends Module{
         "b000001".U -> imm_j,
     ))
 
-
     //
     io.decode_info.fu_code  := fu_code
     io.decode_info.alu_code := alu_code
+    io.decode_info.bu_code  := bu_code
+    io.decode_info.lu_code  := lu_code
+    io.decode_info.su_code  := su_code
 
     io.rs1_addr := inst(19, 15)
     io.rs2_addr := inst(24, 20)
@@ -79,10 +174,9 @@ class Decode extends Module{
     io.rs2_en := type_r || type_s || type_b 
     io.rd_en  := type_r || type_i || type_u || type_j
 
-    //
     io.op1 := Mux(io.rs1_en, io.rs1_data, 0.U)
     io.op2 := Mux(io.rs2_en, io.rs2_data, imm)
-    io.op3 := 0.U
+    io.imm := imm
 }
 
 
