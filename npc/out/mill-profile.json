@@ -1,27 +1,27 @@
 [
     {
         "label": "cpu.test.resources",
-        "millis": 76,
+        "millis": 60,
         "cached": false
     },
     {
         "label": "mill.scalalib.ZincWorkerModule.classpath",
-        "millis": 11,
+        "millis": 21,
         "cached": true
     },
     {
         "label": "mill.scalalib.ZincWorkerModule.worker",
-        "millis": 83,
+        "millis": 89,
         "cached": false
     },
     {
         "label": "cpu.upstreamCompileOutput",
-        "millis": 0,
+        "millis": 1,
         "cached": true
     },
     {
         "label": "cpu.sources",
-        "millis": 21,
+        "millis": 23,
         "cached": false
     },
     {
@@ -31,32 +31,32 @@
     },
     {
         "label": "cpu.allSources",
-        "millis": 2,
-        "cached": false
-    },
-    {
-        "label": "cpu.allSourceFiles",
-        "millis": 12,
-        "cached": false
-    },
-    {
-        "label": "cpu.transitiveLocalClasspath",
-        "millis": 0,
-        "cached": true
-    },
-    {
-        "label": "cpu.resources",
         "millis": 3,
         "cached": false
     },
     {
+        "label": "cpu.allSourceFiles",
+        "millis": 15,
+        "cached": false
+    },
+    {
+        "label": "cpu.transitiveLocalClasspath",
+        "millis": 1,
+        "cached": true
+    },
+    {
+        "label": "cpu.resources",
+        "millis": 4,
+        "cached": false
+    },
+    {
         "label": "cpu.unmanagedClasspath",
-        "millis": 0,
+        "millis": 1,
         "cached": true
     },
     {
         "label": "cpu.scalaVersion",
-        "millis": 1,
+        "millis": 0,
         "cached": true
     },
     {
@@ -66,42 +66,42 @@
     },
     {
         "label": "cpu.compileIvyDeps",
-        "millis": 0,
+        "millis": 1,
         "cached": true
     },
     {
         "label": "cpu.transitiveCompileIvyDeps",
-        "millis": 1,
-        "cached": true
-    },
-    {
-        "label": "cpu.scalaOrganization",
         "millis": 0,
         "cached": true
     },
     {
-        "label": "cpu.scalaLibraryIvyDeps",
-        "millis": 67,
-        "cached": true
-    },
-    {
-        "label": "cpu.ivyDeps",
-        "millis": 2,
-        "cached": true
-    },
-    {
-        "label": "cpu.transitiveIvyDeps",
+        "label": "cpu.scalaOrganization",
         "millis": 1,
         "cached": true
     },
     {
-        "label": "cpu.resolvedIvyDeps",
+        "label": "cpu.scalaLibraryIvyDeps",
+        "millis": 47,
+        "cached": true
+    },
+    {
+        "label": "cpu.ivyDeps",
+        "millis": 6,
+        "cached": true
+    },
+    {
+        "label": "cpu.transitiveIvyDeps",
         "millis": 2,
         "cached": true
     },
     {
+        "label": "cpu.resolvedIvyDeps",
+        "millis": 3,
+        "cached": true
+    },
+    {
         "label": "cpu.compileClasspath",
-        "millis": 2,
+        "millis": 3,
         "cached": true
     },
     {
@@ -121,23 +121,23 @@
     },
     {
         "label": "cpu.scalacPluginIvyDeps",
-        "millis": 3,
+        "millis": 11,
         "cached": true
     },
     {
         "label": "cpu.scalacPluginClasspath",
-        "millis": 2,
+        "millis": 3,
         "cached": true
     },
     {
         "label": "cpu.compile",
-        "millis": 9476,
+        "millis": 7944,
         "cached": false
     },
     {
         "label": "cpu.test.upstreamCompileOutput",
-        "millis": 3,
-        "cached": false
+        "millis": 1,
+        "cached": true
     },
     {
         "label": "cpu.test.sources",
@@ -146,7 +146,7 @@
     },
     {
         "label": "cpu.test.generatedSources",
-        "millis": 0,
+        "millis": 1,
         "cached": true
     },
     {
@@ -161,17 +161,17 @@
     },
     {
         "label": "cpu.localClasspath",
-        "millis": 2,
-        "cached": false
+        "millis": 1,
+        "cached": true
     },
     {
         "label": "cpu.test.transitiveLocalClasspath",
-        "millis": 3,
-        "cached": false
+        "millis": 0,
+        "cached": true
     },
     {
         "label": "cpu.test.unmanagedClasspath",
-        "millis": 0,
+        "millis": 1,
         "cached": true
     },
     {
@@ -181,12 +181,12 @@
     },
     {
         "label": "cpu.test.platformSuffix",
-        "millis": 0,
+        "millis": 1,
         "cached": true
     },
     {
         "label": "cpu.test.compileIvyDeps",
-        "millis": 1,
+        "millis": 0,
         "cached": true
     },
     {
@@ -211,18 +211,18 @@
     },
     {
         "label": "cpu.test.transitiveIvyDeps",
-        "millis": 3,
-        "cached": true
-    },
-    {
-        "label": "cpu.test.resolvedIvyDeps",
         "millis": 2,
         "cached": true
     },
     {
+        "label": "cpu.test.resolvedIvyDeps",
+        "millis": 3,
+        "cached": true
+    },
+    {
         "label": "cpu.test.compileClasspath",
-        "millis": 4,
-        "cached": false
+        "millis": 1,
+        "cached": true
     },
     {
         "label": "cpu.test.scalaCompilerClasspath",
@@ -231,33 +231,33 @@
     },
     {
         "label": "cpu.test.compile",
-        "millis": 35,
-        "cached": false
-    },
-    {
-        "label": "cpu.test.localClasspath",
         "millis": 1,
         "cached": true
     },
     {
-        "label": "cpu.test.runIvyDeps",
+        "label": "cpu.test.localClasspath",
         "millis": 0,
         "cached": true
     },
     {
+        "label": "cpu.test.runIvyDeps",
+        "millis": 1,
+        "cached": true
+    },
+    {
         "label": "cpu.test.resolvedRunIvyDeps",
-        "millis": 2,
+        "millis": 1,
         "cached": true
     },
     {
         "label": "cpu.test.upstreamAssemblyClasspath",
-        "millis": 5,
-        "cached": false
+        "millis": 2,
+        "cached": true
     },
     {
         "label": "cpu.test.runClasspath",
-        "millis": 6,
-        "cached": false
+        "millis": 1,
+        "cached": true
     },
     {
         "label": "cpu.test.forkArgs",
@@ -266,7 +266,7 @@
     },
     {
         "label": "cpu.test.forkEnv",
-        "millis": 4,
+        "millis": 3,
         "cached": true
     },
     {
@@ -281,7 +281,7 @@
     },
     {
         "label": "cpu.test.runMain",
-        "millis": 6292,
+        "millis": 4627,
         "cached": false
     }
 ]
