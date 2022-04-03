@@ -21,5 +21,4 @@ bool difftest_step(uint64_t pc);
 bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc);
 
 
-
 #endif

@@ -29,7 +29,7 @@ int main(int argc, char** argv, char** env) {
 
     
     uint64_t size = load_program(img_file);
-    //init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
+    init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     //init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
 
     int sim_time = 0;                             // sim time
@@ -44,24 +44,29 @@ int main(int argc, char** argv, char** env) {
         pc = top->io_imem_addr;
         top->io_imem_data = read_memory(pc, 4);                                                              
         top->eval();                                
+        tfp->dump(contextp->time());
 
-        //halt
+        //rtl debug
         if(sim_time >= 2 && sim_time % 2 == 0){
+            //halt
             if(cpu_halt[0]) {
                 Log("Detected ebreak, sim quit");
-                //Logc(ASNI_FG_GREEN,"halt good trap");
+                if(!cpu_gpr[10]) Logc(ASNI_FG_GREEN,"halt good trap");
+                else Logc(ASNI_FG_RED,"halt bad trap");
                 break;
             }
-            for(int i=0; i<32; i++) cpu.gpr[i] = cpu_gpr[i];
-            cpu.pc = pc;
-            // if(!difftest_step(pre_pc)) {
-            //     Log("difftest detect wrong, sim quit");
-            //     break;
-            // }
+            //difftest
+            if(sim_time >= 4 && sim_time % 2 == 0){
+                isa_reg_update(pc, cpu_gpr);
+                //isa_reg_display();
+                if(!difftest_step(pre_pc)) {
+                    Log("difftest detect wrong, sim quit");
+                    break;
+                }
+            }
+            
         }
         
-
-        tfp->dump(contextp->time());
         contextp->timeInc(1);
         sim_time++;
     }

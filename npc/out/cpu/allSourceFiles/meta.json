@@ -1,0 +1,14 @@
+{
+    "value": [
+        "ref:eef2cf4a:/home/zgs/project/ysyx-workbench/npc/cpu/src/Core.scala",
+        "ref:30dbe31b:/home/zgs/project/ysyx-workbench/npc/cpu/src/RegFile.scala",
+        "ref:134f7590:/home/zgs/project/ysyx-workbench/npc/cpu/src/Execution.scala",
+        "ref:b115b255:/home/zgs/project/ysyx-workbench/npc/cpu/src/Elaborate.scala",
+        "ref:7d6a0872:/home/zgs/project/ysyx-workbench/npc/cpu/src/Instructions.scala",
+        "ref:09ecf194:/home/zgs/project/ysyx-workbench/npc/cpu/src/SimTop.scala",
+        "ref:017becb9:/home/zgs/project/ysyx-workbench/npc/cpu/src/IFetch.scala",
+        "ref:6c0870f8:/home/zgs/project/ysyx-workbench/npc/cpu/src/Decode.scala"
+    ],
+    "valueHash": -956802462,
+    "inputsHash": 1808637091
+}

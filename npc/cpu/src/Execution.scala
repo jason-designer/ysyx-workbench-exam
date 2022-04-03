@@ -21,7 +21,7 @@ class Execution extends Module{
 
     //
     val alu_out = MuxLookup(alu_code, 0.U, Array(
-        "b000001".U -> (op1 + op2 + 1.U),
+        "b000001".U -> (op1 + op2),
     ))
 
 

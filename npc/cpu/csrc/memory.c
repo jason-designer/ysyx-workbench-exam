@@ -12,8 +12,9 @@ uint64_t load_program(char* img_file){
     m[2] = 0x00200193;  //li  gp,2
     m[3] = 0x00108713;  //addi    a4,ra,1
     m[4] = 0x00708713;  //addi    a4,ra,7
-    m[5] = 0x00100073;  //ebreak
-    return 24; // built-in image size
+    m[5] = 0x00000513;  //li  a0,0
+    m[6] = 0x00100073;  //ebreak
+    return 28; // built-in image size
     }
     FILE *fp = fopen(img_file, "rb");
     assert(fp);

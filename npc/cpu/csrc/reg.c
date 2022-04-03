@@ -1,4 +1,5 @@
 #include "reg.h"
+#include "difftest.h"
 
 uint64_t *cpu_gpr = NULL;
 void set_gpr_ptr(const svOpenArrayHandle r) {
@@ -12,12 +13,18 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
-void isa_reg_display() {
+void isa_reg_display(){
   int i;
+  printf(" pc 0x%016lx\n",cpu.pc);
   for(i=0;i<32;i++)
   {
     printf("%3s ",regs[i]);
-    printf("0x%016lx  ",cpu_gpr[i]);
+    printf("0x%016lx  ",cpu.gpr[i]);
     if(i%4==3) printf("\n");
   }
+}
+
+void isa_reg_update(uint64_t pc, uint64_t* gpr){
+  for(int i=0; i<32; i++) cpu.gpr[i] = gpr[i];
+  cpu.pc = pc;
 }

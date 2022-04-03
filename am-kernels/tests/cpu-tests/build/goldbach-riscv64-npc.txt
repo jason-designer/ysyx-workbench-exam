@@ -1,0 +1,91 @@
+
+/home/zgs/project/ysyx-workbench/am-kernels/tests/cpu-tests/build/goldbach-riscv64-npc.elf:     file format elf64-littleriscv
+
+
+Disassembly of section .text:
+
+0000000080000000 <_start>:
+    80000000:	00000413          	li	s0,0
+    80000004:	00009117          	auipc	sp,0x9
+    80000008:	ffc10113          	addi	sp,sp,-4 # 80009000 <_end>
+    8000000c:	0fc000ef          	jal	ra,80000108 <_trm_init>
+
+0000000080000010 <check>:
+    80000010:	00050463          	beqz	a0,80000018 <check+0x8>
+    80000014:	00008067          	ret
+    80000018:	ff010113          	addi	sp,sp,-16
+    8000001c:	00100513          	li	a0,1
+    80000020:	00113423          	sd	ra,8(sp)
+    80000024:	0d8000ef          	jal	ra,800000fc <halt>
+
+0000000080000028 <goldbach>:
+    80000028:	00200793          	li	a5,2
+    8000002c:	06a7de63          	bge	a5,a0,800000a8 <goldbach+0x80>
+    80000030:	ffe5061b          	addiw	a2,a0,-2
+    80000034:	00200813          	li	a6,2
+    80000038:	00100893          	li	a7,1
+    8000003c:	03078463          	beq	a5,a6,80000064 <goldbach+0x3c>
+    80000040:	0017f713          	andi	a4,a5,1
+    80000044:	04070c63          	beqz	a4,8000009c <goldbach+0x74>
+    80000048:	00200693          	li	a3,2
+    8000004c:	00c0006f          	j	80000058 <goldbach+0x30>
+    80000050:	02e7e73b          	remw	a4,a5,a4
+    80000054:	04070463          	beqz	a4,8000009c <goldbach+0x74>
+    80000058:	0016869b          	addiw	a3,a3,1
+    8000005c:	00068713          	mv	a4,a3
+    80000060:	fef698e3          	bne	a3,a5,80000050 <goldbach+0x28>
+    80000064:	0006059b          	sext.w	a1,a2
+    80000068:	03160a63          	beq	a2,a7,8000009c <goldbach+0x74>
+    8000006c:	03058463          	beq	a1,a6,80000094 <goldbach+0x6c>
+    80000070:	00167713          	andi	a4,a2,1
+    80000074:	02070463          	beqz	a4,8000009c <goldbach+0x74>
+    80000078:	00200693          	li	a3,2
+    8000007c:	00c0006f          	j	80000088 <goldbach+0x60>
+    80000080:	02e5e73b          	remw	a4,a1,a4
+    80000084:	00070c63          	beqz	a4,8000009c <goldbach+0x74>
+    80000088:	0016869b          	addiw	a3,a3,1
+    8000008c:	00068713          	mv	a4,a3
+    80000090:	fed598e3          	bne	a1,a3,80000080 <goldbach+0x58>
+    80000094:	00100513          	li	a0,1
+    80000098:	00008067          	ret
+    8000009c:	0017879b          	addiw	a5,a5,1
+    800000a0:	fff6061b          	addiw	a2,a2,-1
+    800000a4:	f8f51ce3          	bne	a0,a5,8000003c <goldbach+0x14>
+    800000a8:	00000513          	li	a0,0
+    800000ac:	00008067          	ret
+
+00000000800000b0 <main>:
+    800000b0:	fe010113          	addi	sp,sp,-32
+    800000b4:	00813823          	sd	s0,16(sp)
+    800000b8:	00913423          	sd	s1,8(sp)
+    800000bc:	00113c23          	sd	ra,24(sp)
+    800000c0:	00400413          	li	s0,4
+    800000c4:	02000493          	li	s1,32
+    800000c8:	00040513          	mv	a0,s0
+    800000cc:	f5dff0ef          	jal	ra,80000028 <goldbach>
+    800000d0:	fff50513          	addi	a0,a0,-1
+    800000d4:	0024041b          	addiw	s0,s0,2
+    800000d8:	00153513          	seqz	a0,a0
+    800000dc:	f35ff0ef          	jal	ra,80000010 <check>
+    800000e0:	fe9414e3          	bne	s0,s1,800000c8 <main+0x18>
+    800000e4:	01813083          	ld	ra,24(sp)
+    800000e8:	01013403          	ld	s0,16(sp)
+    800000ec:	00813483          	ld	s1,8(sp)
+    800000f0:	00000513          	li	a0,0
+    800000f4:	02010113          	addi	sp,sp,32
+    800000f8:	00008067          	ret
+
+00000000800000fc <halt>:
+    800000fc:	00050513          	mv	a0,a0
+    80000100:	00100073          	ebreak
+    80000104:	0000006f          	j	80000104 <halt+0x8>
+
+0000000080000108 <_trm_init>:
+    80000108:	ff010113          	addi	sp,sp,-16
+    8000010c:	00000517          	auipc	a0,0x0
+    80000110:	01c50513          	addi	a0,a0,28 # 80000128 <_etext>
+    80000114:	00113423          	sd	ra,8(sp)
+    80000118:	f99ff0ef          	jal	ra,800000b0 <main>
+    8000011c:	00050513          	mv	a0,a0
+    80000120:	00100073          	ebreak
+    80000124:	0000006f          	j	80000124 <_trm_init+0x1c>

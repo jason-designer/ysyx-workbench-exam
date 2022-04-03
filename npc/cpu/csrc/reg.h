@@ -9,7 +9,7 @@ extern "C" void set_gpr_ptr(const svOpenArrayHandle r);
 
 extern const char *regs[];
 void isa_reg_display();
-
+void isa_reg_update(uint64_t pc, uint64_t* gpr);
 
 
 #endif

@@ -3,7 +3,7 @@
 #include "memory.h"
 #include "reg.h"
 
-CPU_state cpu = {};
+CPU_state cpu = {.pc = 0x80000000};
 
 void (*ref_difftest_memcpy)(uint64_t addr, void *buf, uint64_t n, bool direction) = NULL;
 void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
@@ -69,8 +69,6 @@ bool difftest_step(uint64_t pc) {
 
 
 bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc) {
-  printf("check pc=%lx\n",pc);
-  printf("ref-pc=%lx  cpu.pc=%lx\n",ref_r->pc, cpu.pc);
   bool res = true;
 	if(ref_r->pc != cpu.pc) {
 		printf("pc different after executing inst at pc = %lx , right = %lx  wrong = %lx  \n", pc, ref_r->pc, cpu.pc);

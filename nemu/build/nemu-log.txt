@@ -1,0 +1,14 @@
+[1;34m[src/utils/log.c:13 init_log] Log is written to /home/zgs/project/ysyx-workbench/nemu/build/nemu-log.txt[0m
+[1;34m[src/memory/paddr.c:41 init_mem] physical memory area [0x80000000, 0x88000000][0m
+[1;34m[src/monitor/monitor.c:34 load_img] No image is given. Use the default build-in image.[0m
+[1;34m[src/monitor/monitor.c:13 welcome] Trace: [1;32mON[0m[0m
+[1;34m[src/monitor/monitor.c:14 welcome] If trace is enabled, a log file will be generated to record the trace. This may lead to a large log file. If it is not necessary, you can disable it in menuconfig[0m
+[1;34m[src/monitor/monitor.c:17 welcome] Build time: 13:54:01, Apr  3 2022[0m
+0x0000000080000000: 97 02 00 00 
+0x0000000080000004: 23 b8 02 00 
+0x0000000080000008: 03 b5 02 01 
+0x000000008000000c: 73 00 10 00 
+[1;34m[src/cpu/cpu-exec.c:110 cpu_exec] nemu: [1;32mHIT GOOD TRAP[0m at pc = 0x000000008000000c[0m
+[1;34m[src/cpu/cpu-exec.c:78 statistic] host time spent = 209 us[0m
+[1;34m[src/cpu/cpu-exec.c:79 statistic] total guest instructions = 4[0m
+[1;34m[src/cpu/cpu-exec.c:80 statistic] simulation frequency = 19,138 inst/s[0m
