@@ -8,7 +8,7 @@
 #include "difftest.h"
 
 
-extern CPU_state cpu;
+enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG};
 
 #define SIM_END_TIME 5000
 
@@ -27,11 +27,11 @@ int main(int argc, char** argv, char** env) {
     tfp->open(tfp_file);   // set the path of the vcd file, you need to mkdir before running it
     /****************************************************************************/
 
-    
     uint64_t size = load_program(img_file);
     init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     //init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
 
+    int sdb_state = SDB_RUNNING;
     int sim_time = 0;                             // sim time
     uint64_t pre_pc = 0;
     uint64_t pc = 0;
@@ -40,7 +40,7 @@ int main(int argc, char** argv, char** env) {
         top->clock = sim_time % 2;
 
         top->eval();
-        pre_pc = pc;
+        if(sim_time % 2 == 1) pre_pc = pc;
         pc = top->io_imem_addr;
         top->io_imem_data = read_memory(pc, 4);                                                              
         top->eval();                                
@@ -51,8 +51,8 @@ int main(int argc, char** argv, char** env) {
             //halt
             if(cpu_halt[0]) {
                 Log("Detected ebreak, sim quit");
-                if(!cpu_gpr[10]) Logc(ASNI_FG_GREEN,"halt good trap");
-                else Logc(ASNI_FG_RED,"halt bad trap");
+                if(!cpu_gpr[10]) sdb_state = SDB_HIT_GOOD_TRAP;
+                else sdb_state = SDB_HIT_BAD_TRAP;
                 break;
             }
             //difftest
@@ -60,21 +60,28 @@ int main(int argc, char** argv, char** env) {
                 isa_reg_update(pc, cpu_gpr);
                 //isa_reg_display();
                 if(!difftest_step(pre_pc)) {
-                    Log("difftest detect wrong, sim quit");
+                    sdb_state = SDB_DIFFTEST_WRONG;
                     break;
                 }
             }
-            
         }
         
         contextp->timeInc(1);
         sim_time++;
     }
 
+    switch(sdb_state){
+        case SDB_HIT_GOOD_TRAP:  Logc(ASNI_FG_GREEN,"halt good trap"); break;
+        case SDB_HIT_BAD_TRAP:   Logc(ASNI_FG_RED,"halt bad trap"); break;
+        case SDB_DIFFTEST_WRONG: Log("difftest detect wrong, sim quit"); break;
+    }
+    int fail = 1;
+    if(sdb_state == SDB_HIT_GOOD_TRAP) fail = 0;
+
 
     /***********************************************************************/
     tfp->close();
     delete top;
     delete contextp;
-    return 0;
+    return fail;
 }

@@ -51,6 +51,7 @@ sim:
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
 	-v $(VSRC_DIR)/RegFile.v                        \
 	-v $(VSRC_DIR)/Halt.v                           \
+	-v $(VSRC_DIR)/Memory.v                         \
 	-I $(CSRC_DIR)/halt.c                           \
 	-I $(CSRC_DIR)/memory.c                         \
 	-I $(CSRC_DIR)/reg.c                            \

@@ -39,4 +39,50 @@ uint64_t read_memory(uint64_t addr, int length){
         default: assert(0);
     }
 }
+
+void write_memory(uint64_t addr, uint64_t data, int length){
+    //if(addr == 0) return;
+    assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
+    switch(length){
+        case 1: *(uint8_t*)(mem + addr - RESET_VECTOR) = (uint8_t)data; break;
+        case 2: *(uint16_t*)(mem + addr - RESET_VECTOR) = (uint16_t)data; break;
+        case 4: *(uint32_t*)(mem + addr - RESET_VECTOR) = (uint32_t)data; break;
+        case 8: *(uint64_t*)(mem + addr - RESET_VECTOR) = (uint64_t)data; break;
+        default: assert(0);
+    }
+}
+
+uint64_t wmask_to_64bit(uint8_t wmask){
+    uint64_t x = 0;
+    for(int i = 0; i < 8; i++){
+        uint64_t m = 0;
+        if((wmask >> i) & 0x01) m = 0xff;
+        else m = 0;
+        x = x | (m << (i * 8));
+    }
+    return x;
+}
+
+
+void pmem_read(unsigned char ren, long long raddr, long long *rdata) {
+    // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
+    //Logc(ASNI_FG_YELLOW,"dmem read mem, raddr = %llx, ren = %d",raddr, ren);
+    if(ren) *rdata = read_memory(raddr & 0xfffffffffffffff8, 8);
+}
+void pmem_write(unsigned char wen, long long waddr, long long wdata, char wmask) {
+    // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
+    // `wmask`中每比特表示`wdata`中1个字节的掩码,
+    // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
+    //Logc(ASNI_FG_YELLOW,"dmem write mem, wen = %d, waddr = %llx, wdata = %llx, wmask = %x", wen, waddr, wdata, wmask);
+    if(wen){
+        uint64_t x = read_memory(waddr & 0xfffffffffffffff8, 8);
+        uint64_t mask = wmask_to_64bit(wmask);
+        x = x & (~mask);
+        x = x | (mask & wdata);
+        write_memory(waddr & 0xfffffffffffffff8, x, 8);
+    }
+}
+
+
+
     

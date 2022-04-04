@@ -2,10 +2,13 @@
 *
 !*/
 !/nemu/*
+!/abstract-machine/*
 !/nexus-am/*
 !/nanos-lite/*
 !/navy-apps/*
 !/npc/*
+/npc/build/*
+/npc/out/*
 !Makefile
 !README.md
 !.gitignore

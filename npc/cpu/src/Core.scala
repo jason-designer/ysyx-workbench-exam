@@ -2,10 +2,26 @@ import chisel3._
 import chisel3.util._
 import Instructions._
 
+class ImemIO extends Bundle{
+  val en = Output(Bool())
+  val addr = Output(UInt(64.W))
+  val data = Input(UInt(32.W))
+}
+
+class DmemIO extends Bundle{
+  val ren   = Output(Bool())
+  val raddr = Output(UInt(64.W))
+  val rdata = Input(UInt(64.W))
+  val wen   = Output(Bool())
+  val waddr = Output(UInt(64.W))
+  val wdata = Output(UInt(64.W))
+  val wmask = Output(UInt(8.W))
+}
+
 class Core extends Module{
   val io = IO(new Bundle{
     val imem = new ImemIO
-    //val dmem = new DmemIO
+    val dmem = new DmemIO
   })
 
   val ifu = Module(new IFetch)
@@ -31,6 +47,7 @@ class Core extends Module{
   ieu.io.op2 := idu.io.op2
   ieu.io.pc  := ifu.io.pc
   ieu.io.imm := idu.io.imm
+  ieu.io.dmem <> io.dmem
 
   rfu.io.rs1_en   := idu.io.rs1_en
   rfu.io.rs2_en   := idu.io.rs2_en
@@ -40,6 +57,7 @@ class Core extends Module{
   rfu.io.rd_addr  := idu.io.rd_addr
   rfu.io.rd_data  := ieu.io.out
   
+
   //debug
   printf("pc=%x inst=%x wen=%d waddr=%d wdata=%x\n", ifu.io.pc, ifu.io.inst, idu.io.rd_en, idu.io.rd_addr, ieu.io.out)
   //halt
@@ -82,3 +100,37 @@ class Halt extends BlackBox with HasBlackBoxInline{
 }
 
 
+class Memory extends BlackBox with HasBlackBoxInline{
+  val io = IO(new Bundle{
+    val ren   = Input(Bool())
+    val raddr = Input(UInt(64.W))
+    val rdata = Output(UInt(64.W))
+    val wen   = Input(Bool())
+    val waddr = Input(UInt(64.W))
+    val wdata = Input(UInt(64.W))
+    val wmask = Input(UInt(8.W))
+  })
+    setInline("Memory.v",
+            """
+           |import "DPI-C" function void pmem_read(input logic ren, input longint raddr, output longint rdata);
+           |import "DPI-C" function void pmem_write(input logic wen, input longint waddr, input longint wdata, input byte wmask);
+           |
+           |module Memory(
+           |            input  ren,
+           |            input  [63:0] raddr,
+           |            output [63:0] rdata,
+           |            input  wen,
+           |            input  [63:0] waddr,
+           |            input  [63:0] wdata,
+           |            input  [7:0] wmask);
+           |
+           |  always @(*) begin
+           |    pmem_read(ren, raddr, rdata);
+           |    pmem_write(wen, waddr, wdata, wmask);
+           |  end
+           |
+           |endmodule
+           |
+           |
+            """.stripMargin)
+}

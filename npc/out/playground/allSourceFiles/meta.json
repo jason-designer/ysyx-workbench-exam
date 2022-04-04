@@ -1,9 +1,0 @@
-{
-    "value": [
-        "ref:2315d240:/home/zgs/project/ysyx-workbench/npc/playground/src/GCD.scala",
-        "ref:5da31c1c:/home/zgs/project/ysyx-workbench/npc/playground/src/Elaborate.scala",
-        "ref:3916b955:/home/zgs/project/ysyx-workbench/npc/playground/src/DecoupledGCD.scala"
-    ],
-    "valueHash": -1265526093,
-    "inputsHash": 481185251
-}
