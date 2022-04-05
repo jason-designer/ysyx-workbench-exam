@@ -9,6 +9,7 @@ class SimTop extends Module{
   val memory = Module(new Memory)
   val core = Module(new Core)
   io.imem <> core.io.imem
+  memory.io.clk := clock
   memory.io.ren   := core.io.dmem.ren 
   memory.io.raddr := core.io.dmem.raddr 
   core.io.dmem.rdata   := memory.io.rdata

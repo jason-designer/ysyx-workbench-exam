@@ -8,6 +8,7 @@ class DecodeInfo extends Bundle{
     val bu_code  = Output(UInt())
     val lu_code  = Output(UInt())
     val su_code  = Output(UInt())
+    val mdu_code = Output(UInt())
 }
 class Decode extends Module{
     val io = IO(new Bundle{
@@ -89,6 +90,17 @@ class Decode extends Module{
     val sh      = inst === SH
     val sw      = inst === SW
     val sd      = inst === SD
+    //mul and div
+    val mul     = inst === MUL
+    val mulw    = inst === MULW
+    val div     = inst === DIV
+    val divw    = inst === DIVW
+    val divu    = inst === DIVU
+    val divuw   = inst === DIVUW
+    val rem     = inst === REM
+    val remw    = inst === REMW
+    val remu    = inst === REMU
+    val remuw   = inst === REMUW
 
     //---------------------------------------get fu_code
     //alu
@@ -123,19 +135,26 @@ class Decode extends Module{
     //su
     val su_code = Cat(sd, sw, sh, sb)
     val su_en   = su_code =/= 0.U
+    //mdu
+    val mdu_code = Cat(remuw, remu, remw, rem, divuw, divu, divw, div, mulw, mul)
+    val mdu_en   = mdu_code =/= 0.U
     //fu_code
-    val fu_code = Cat(su_en, lu_en, bu_en, alu_en)
+    val fu_code = Cat(mdu_en, su_en, lu_en, bu_en, alu_en)
+    
 
     //----------------------------------------get inst type
     val type_r =    sll  || srl   || sra  || sllw  || srlw  || sraw  ||
                     add  || addw  || sub  || subw  ||
                     xor  || or    || and  ||
                     slt  || sltu  ||
-                    jalr 
+                    mul  || mulw  ||
+                    div  || divw  || divu || divuw ||
+                    rem  || remw  || remu || remuw 
     val type_i =    slli || srli  || srai || slliw || srliw || sraiw ||
                     addi || addiw ||
                     xori || ori   || andi ||
                     slti || sltiu ||
+                    jalr ||
                     lb   || lh    || lw   || ld    || lbu   || lhu   || lwu 
     val type_s =    sb   || sh    || sw   || sd
     val type_b =    beq  || bne   || blt  || bge   || bltu  || bgeu
@@ -165,6 +184,7 @@ class Decode extends Module{
     io.decode_info.bu_code  := bu_code
     io.decode_info.lu_code  := lu_code
     io.decode_info.su_code  := su_code
+    io.decode_info.mdu_code  := mdu_code
 
     io.rs1_addr := inst(19, 15)
     io.rs2_addr := inst(24, 20)

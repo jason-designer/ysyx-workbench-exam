@@ -20,11 +20,12 @@ class Execution extends Module{
     val op2 = io.op2
     val pc  = io.pc
     val imm = io.imm
-    val fu_code = io.decode_info.fu_code
+    val fu_code  = io.decode_info.fu_code
     val alu_code = io.decode_info.alu_code
-    val bu_code = io.decode_info.bu_code
-    val lu_code = io.decode_info.lu_code
-    val su_code = io.decode_info.su_code
+    val bu_code  = io.decode_info.bu_code
+    val lu_code  = io.decode_info.lu_code
+    val su_code  = io.decode_info.su_code
+    val mdu_code = io.decode_info.mdu_code
     val dmem = io.dmem
     //
     def sext(v:UInt, len:Int):UInt = len match{
@@ -101,6 +102,20 @@ class Execution extends Module{
     ))
     val su_out = 0.U
 
+    //mdu
+    val mdu_out = MuxLookup(mdu_code, 0.U, Array(
+        "b0000000001".U -> (op1 * op2),                                             //mul
+        "b0000000010".U -> sext((op1 * op2), 4),                                    //mulw
+        "b0000000100".U -> (op1.asSInt() / op2.asSInt()).asUInt(),                  //div
+        "b0000001000".U -> (op1(31, 0).asSInt() / op2(31, 0).asSInt()).asUInt(),    //divw
+        "b0000010000".U -> (op1 / op2),                 //divu
+        "b0000100000".U -> (op1(31, 0) / op2(31, 0)),   //divuw
+        "b0001000000".U -> (op1.asSInt() % op2.asSInt()).asUInt(),  //rem
+        "b0010000000".U -> (op1(31, 0).asSInt() % op2(31, 0).asSInt()).asUInt(),  //remw
+        "b0100000000".U -> (op1 % op2),  //remu
+        "b1000000000".U -> (op1(31, 0) % op2(31, 0)),  //remuw
+    ))
+
 
     //
     io.out := MuxLookup(fu_code, 0.U, Array(
@@ -108,6 +123,7 @@ class Execution extends Module{
         "b000010".U -> bu_out,
         "b000100".U -> lu_out,
         "b001000".U -> su_out,
+        "b010000".U -> mdu_out,
     ))
     io.jump_en := bu_jump_en
     io.jump_pc := bu_jump_pc

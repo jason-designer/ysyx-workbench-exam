@@ -45,6 +45,7 @@ void init_difftest(char *ref_so_file, uint64_t img_size, int port) {
       "This will help you a lot for debugging, but also significantly reduce the performance. "
       "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
 
+  init_cpu();
   ref_difftest_init(port);
   ref_difftest_memcpy(RESET_VECTOR, mem, img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
@@ -83,4 +84,9 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc) {
 	return res;
 }
 
+
+void init_cpu(){
+    for(int i = 0; i < 32; i++) cpu.gpr[i] = 0;
+    cpu.pc = RESET_VECTOR;
+}
 

@@ -102,6 +102,7 @@ class Halt extends BlackBox with HasBlackBoxInline{
 
 class Memory extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{
+    val clk   = Input(Clock())
     val ren   = Input(Bool())
     val raddr = Input(UInt(64.W))
     val rdata = Output(UInt(64.W))
@@ -116,6 +117,7 @@ class Memory extends BlackBox with HasBlackBoxInline{
            |import "DPI-C" function void pmem_write(input logic wen, input longint waddr, input longint wdata, input byte wmask);
            |
            |module Memory(
+           |            input  clk,
            |            input  ren,
            |            input  [63:0] raddr,
            |            output [63:0] rdata,

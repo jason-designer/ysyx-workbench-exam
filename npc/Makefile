@@ -37,11 +37,16 @@ clean:
 .PHONY: test verilog help compile bsp reformat checkformat clean
 
 
+ALL3_TEST_FILE = $(shell find $(NPC_HOME)/bin/non-output/riscv-tests/ -name "*-riscv-tests.bin")
+ALL4_TEST_FILE = $(shell find $(YSYX_DIR)/am-kernels/tests/cpu-tests/build/ -name "*-riscv64-npc.bin")
 ifdef ALL4
 IMG_FILE = $(YSYX_DIR)/am-kernels/tests/cpu-tests/build/$(ALL4)-riscv64-npc.bin
 endif
 ifdef ALL3
 IMG_FILE = $(NPC_HOME)/bin/non-output/riscv-tests/$(ALL3)-riscv-tests.bin
+endif
+ifdef SIMALL
+IMG_FILE = $(ALL3_TEST_FILE) $(ALL4_TEST_FILE)
 endif
 
 sim:
@@ -49,6 +54,7 @@ sim:
 	verilator -Wall --cc --exe --build --trace      \
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
+	-Wno-LATCH                                      \
 	-v $(VSRC_DIR)/RegFile.v                        \
 	-v $(VSRC_DIR)/Halt.v                           \
 	-v $(VSRC_DIR)/Memory.v                         \
@@ -66,8 +72,7 @@ sim:
 
 	mkdir -p $(WAVEFORM_DIR)
 	$(VERILATOR_DIR)/VSimTop  $(WAVEFORM_DIR)/sim_main.vcd  $(IMG_FILE)
-
-
+	
 
 wave:
 	gtkwave $(WAVEFORM_DIR)/sim_main.vcd
