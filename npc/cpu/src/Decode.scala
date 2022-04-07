@@ -15,16 +15,17 @@ class Decode extends Module{
         val pc = Input(UInt(64.W))
         val inst = Input(UInt(32.W))
         
-        val decode_info = new DecodeInfo
-
         val rs1_en   = Output(Bool())
         val rs2_en   = Output(Bool())
-        val rd_en    = Output(Bool())
         val rs1_addr = Output(UInt(5.W))
         val rs2_addr = Output(UInt(5.W))
-        val rd_addr  = Output(UInt(5.W))
         val rs1_data = Input(UInt(64.W))
         val rs2_data = Input(UInt(64.W))
+
+        val rd_en    = Output(Bool())
+        val rd_addr  = Output(UInt(5.W))
+
+        val decode_info = new DecodeInfo
 
         val op1 = Output(UInt(64.W))
         val op2 = Output(UInt(64.W))
@@ -141,7 +142,7 @@ class Decode extends Module{
     //fu_code
     val fu_code = Cat(mdu_en, su_en, lu_en, bu_en, alu_en)
     
-
+  
     //----------------------------------------get inst type
     val type_r =    sll  || srl   || sra  || sllw  || srlw  || sraw  ||
                     add  || addw  || sub  || subw  ||
