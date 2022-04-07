@@ -2,6 +2,9 @@ import chisel3._
 import chisel3.util._
 import Instructions._
 
+
+
+123213
 class DecodeInfo extends Bundle{
     val fu_code  = Output(UInt())
     val alu_code = Output(UInt())
