@@ -186,5 +186,21 @@ class WBReg extends Module{
 }
 
 
-
+class JumpFlushDelay extends Module{
+    val io = IO(new Bundle{
+        val in  = Input(Bool())
+        val out = Output(Bool())
+    })
+    val s0 :: s1 :: Nil = Enum(2)
+    val state = RegInit(s0)
+    switch(state){
+        is(s0){
+            state := Mux(io.in, s1, s0)
+        }
+        is(s1){
+            state := s0
+        }
+    }
+    io.out := state
+}
 
