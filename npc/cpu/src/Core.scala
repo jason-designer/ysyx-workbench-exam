@@ -34,8 +34,8 @@ class Core extends Module{
   
   //
   ifu.io.imem <> io.imem
-  ifu.io.jump_en := ieu.io.jump_en
-  ifu.io.jump_pc := ieu.io.jump_pc
+  ifu.io.jump_en := idu.io.jump_en
+  ifu.io.jump_pc := idu.io.jump_pc
 
   idu.io.pc       := ifu.io.pc
   idu.io.inst     := ifu.io.inst

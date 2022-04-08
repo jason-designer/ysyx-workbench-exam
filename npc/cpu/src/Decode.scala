@@ -28,6 +28,8 @@ class Decode extends Module{
         val rd_addr  = Output(UInt(5.W))
 
         val decode_info = new DecodeInfo
+        val jump_en = Output(Bool())
+        val jump_pc = Output(UInt(64.W))
 
         val op1 = Output(UInt(64.W))
         val op2 = Output(UInt(64.W))
@@ -200,6 +202,24 @@ class Decode extends Module{
     io.op1 := Mux(io.rs1_en, io.rs1_data, 0.U)
     io.op2 := Mux(io.rs2_en, io.rs2_data, imm)
     io.imm := imm
+
+    //jump
+    val op1 = io.op1
+    val op2 = io.op2
+    val pc  = io.pc
+    val bu_jump_pc = Mux(bu_code === "b10000000".U, ((op1 + op2) & "hfffffffffffffffe".U), pc + imm)
+    val bu_jump_en = MuxLookup(bu_code, 0.U, Array(
+        "b00000001".U -> (op1 === op2),                     //beq
+        "b00000010".U -> (op1 =/= op2),                     //bne
+        "b00000100".U -> (op1.asSInt()  <  op2.asSInt()),   //blt
+        "b00001000".U -> (op1.asSInt()  >= op2.asSInt()),   //bge
+        "b00010000".U -> (op1  <  op2),                     //bltu
+        "b00100000".U -> (op1  >= op2),                     //bgeu
+        "b01000000".U -> true.B,                            //jal
+        "b10000000".U -> true.B,                            //jalr
+    ))
+    io.jump_en := bu_jump_en
+    io.jump_pc := bu_jump_pc
 }
 
 

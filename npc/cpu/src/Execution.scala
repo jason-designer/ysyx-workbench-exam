@@ -11,8 +11,7 @@ class Execution extends Module{
         val imm = Input(UInt(64.W))
 
         val out = Output(UInt(64.W))
-        val jump_en = Output(Bool())
-        val jump_pc = Output(UInt(64.W))
+        
 
         val dmem = new DmemIO
     })
@@ -61,17 +60,7 @@ class Execution extends Module{
 
     //bu
     val bu_out = Mux(bu_code === "b10000000".U || bu_code === "b01000000".U, pc + 4.U, 0.U)
-    val bu_jump_pc = Mux(bu_code === "b10000000".U, ((op1 + op2) & "hfffffffffffffffe".U), pc + imm)
-    val bu_jump_en = MuxLookup(bu_code, 0.U, Array(
-        "b00000001".U -> (op1 === op2),                     //beq
-        "b00000010".U -> (op1 =/= op2),                     //bne
-        "b00000100".U -> (op1.asSInt()  <  op2.asSInt()),   //blt
-        "b00001000".U -> (op1.asSInt()  >= op2.asSInt()),   //bge
-        "b00010000".U -> (op1  <  op2),                     //bltu
-        "b00100000".U -> (op1  >= op2),                     //bgeu
-        "b01000000".U -> true.B,                            //jal
-        "b10000000".U -> true.B,                            //jalr
-    ))
+    
     
     //lu
     val lu_offset = op1 + op2
@@ -125,8 +114,6 @@ class Execution extends Module{
         "b001000".U -> su_out,
         "b010000".U -> mdu_out,
     ))
-    io.jump_en := bu_jump_en
-    io.jump_pc := bu_jump_pc
     dmem.ren := lu_ren
     dmem.raddr := lu_raddr
     dmem.wen := su_wen
