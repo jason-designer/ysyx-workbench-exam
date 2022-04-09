@@ -12,9 +12,13 @@ enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG, SDB
 
 #define SIM_END_TIME 20000
 
+typedef struct {
+  bool fail;
+  uint64_t sim_time;
+} Sdb_end_info;
 
 
-int sim_main(int argc, char** argv, char* tfp_file, char* img_file){
+Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     VerilatedContext* contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
     VSimTop* top = new VSimTop{contextp};                 // top is the name of Module
@@ -41,31 +45,32 @@ int sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         top->reset = sim_time < 2 ? 1 : 0;
         top->clock = sim_time % 2;
 
-        top->eval();
-        if(sim_time % 2 == 1) pre_pc = pc;
-        pc = top->io_imem_addr;
-        top->io_imem_data = read_memory(pc, 4);                                                              
+        //top->eval();
+        //if(sim_time % 2 == 1) pre_pc = pc;
+        //pc = top->io_imem_addr;
+        //if(sim_time % 2 == 1)top->io_imem_data = read_memory(pc, 4);                                                              
         top->eval();                                
         tfp->dump(contextp->time());
-
         //rtl debug
         if(sim_time >= 2 && sim_time % 2 == 0){
             //halt
-            if(cpu_halt[0]) {
+            //printf("halt=%u\n", cpu_halt);
+            if((uint8_t)cpu_halt == 1) {
                 Log("Detected ebreak, sim quit");
                 if(!cpu_gpr[10]) sdb_state = SDB_HIT_GOOD_TRAP;
                 else sdb_state = SDB_HIT_BAD_TRAP;
                 break;
             }
+            
             //difftest
-            if(sim_time >= 4 && sim_time % 2 == 0){
-                isa_reg_update(pc, cpu_gpr);
-                //isa_reg_display();
-                if(!difftest_step(pre_pc)) {
-                    sdb_state = SDB_DIFFTEST_WRONG;
-                    break;
-                }
-            }
+            // if(sim_time >= 4 && sim_time % 2 == 0){
+            //     isa_reg_update(pc, cpu_gpr);
+            //     //isa_reg_display();
+            //     if(!difftest_step(pre_pc)) {
+            //         sdb_state = SDB_DIFFTEST_WRONG;
+            //         break;
+            //     }
+            // }
         }
         
         contextp->timeInc(1);
@@ -85,28 +90,32 @@ int sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     tfp->close();
     delete top;
     delete contextp;
-    return fail;
+
+    //pack up end info 
+    Sdb_end_info *res = (Sdb_end_info*)malloc(sizeof(Sdb_end_info));
+    res->fail = fail;
+    res->sim_time = sim_time;
+    return res;
 }
 
 int main(int argc, char** argv, char** env) {
     int program_num = argc - 2;
-    int program_fail[program_num];
+    Sdb_end_info *program_end_info[program_num];
     int fail_num = 0;
     char* tfp_file = argv[1];
     // sim
     for(int i = 0; i < program_num; i++){
         char* img_file = argv[i + 2];
-        program_fail[i] = sim_main(argc, argv, tfp_file, img_file);
-        fail_num += program_fail[i];
+        Sdb_end_info *res;
+        program_end_info[i] = sim_main(argc, argv, tfp_file, img_file);
+        fail_num += program_end_info[i]->fail;
     }
     // printf result
     for(int i = 0; i < program_num; i++){
-        printf("%s:", argv[i+2]);
-        if(program_fail[i]) Logc(ASNI_FG_RED, "FAIL");
+        printf("%s: simtime=%ld  ", argv[i+2], program_end_info[i]->sim_time);
+        if(program_end_info[i]->fail) Logc(ASNI_FG_RED, "FAIL");
         else Logc(ASNI_FG_GREEN, "PASS");
     }
     printf("total program number:%d, fail:%d\n", program_num, fail_num);
-
-
 
 }

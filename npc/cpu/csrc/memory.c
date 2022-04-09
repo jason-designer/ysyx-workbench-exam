@@ -29,6 +29,10 @@ uint64_t load_program(char* img_file){
 }
 
 uint64_t read_memory(uint64_t addr, int length){
+    // if(addr != 0){
+    //     printf("-----%llx, %d\n",addr, length);
+    //     printf("mem=%lx\n",*(uint32_t*)(mem + addr - RESET_VECTOR));
+    // }
     if(addr == 0) return 0;
     if(!(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE))) return 0;
     assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
@@ -64,10 +68,14 @@ uint64_t wmask_to_64bit(uint8_t wmask){
     return x;
 }
 
+void imem_read(unsigned char ren, long long raddr, int *rdata) {
+    //Logc(ASNI_FG_YELLOW,"imem read mem, raddr = %lx, ren = %d",raddr, ren);
+    if(ren) *rdata = read_memory(raddr, 4);
+}
 
 void pmem_read(unsigned char ren, long long raddr, long long *rdata) {
     // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
-    Logc(ASNI_FG_YELLOW,"dmem read mem, raddr = %llx, ren = %d",raddr, ren);
+    //Logc(ASNI_FG_YELLOW,"dmem read mem, raddr = %llx, ren = %d",raddr, ren);
     if(ren) *rdata = read_memory(raddr & 0xfffffffffffffff8, 8);
 }
 void pmem_write(unsigned char wen, long long waddr, long long wdata, char wmask) {

@@ -4,7 +4,7 @@
 #include "common.h"
 #include "verilated_dpi.h"
 
-extern uint64_t* cpu_halt;
-extern "C" void set_halt_ptr(const svOpenArrayHandle r);
+extern uint64_t cpu_halt;
+extern "C" void read_halt(unsigned char halt);
 
 #endif

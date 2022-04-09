@@ -77,30 +77,22 @@ class Halt extends BlackBox with HasBlackBoxInline{
   })
     setInline("Halt.v",
             """
-           |import "DPI-C" function void set_halt_ptr(input logic a []);
+           |import "DPI-C" function void read_halt(input logic halt);
            |
            |module Halt(input clk,
            |            input reset,
            |            input halt);
            |
-           |  reg halt_reg [0:0];
-           |  initial set_halt_ptr(halt_reg);
-           |
            |  always @(posedge clk) begin
-           |    if (reset) begin 
-           |      halt_reg[0] <= 1'b0;
-           |    end else begin
-           |      halt_reg[0] <= halt; // 
-           |    end
+           |    read_halt(halt);
            |  end
            |endmodule
-           |
            |
             """.stripMargin)
 }
 
 
-class Memory extends BlackBox with HasBlackBoxInline{
+class DMemory extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{
     val clk   = Input(Clock())
     val ren   = Input(Bool())
@@ -111,12 +103,12 @@ class Memory extends BlackBox with HasBlackBoxInline{
     val wdata = Input(UInt(64.W))
     val wmask = Input(UInt(8.W))
   })
-    setInline("Memory.v",
+    setInline("DMemory.v",
             """
            |import "DPI-C" function void pmem_read(input logic ren, input longint raddr, output longint rdata);
            |import "DPI-C" function void pmem_write(input logic wen, input longint waddr, input longint wdata, input byte wmask);
            |
-           |module Memory(
+           |module DMemory(
            |            input  clk,
            |            input  ren,
            |            input  [63:0] raddr,
@@ -124,7 +116,7 @@ class Memory extends BlackBox with HasBlackBoxInline{
            |            input  wen,
            |            input  [63:0] waddr,
            |            input  [63:0] wdata,
-           |            input  [7:0] wmask);
+           |            input  [7:0]  wmask);
            |
            |  always @(*) begin
            |    pmem_read(ren, raddr, rdata);
@@ -136,3 +128,31 @@ class Memory extends BlackBox with HasBlackBoxInline{
            |
             """.stripMargin)
 }
+
+class IMemory extends BlackBox with HasBlackBoxInline{
+  val io = IO(new Bundle{
+    val clk   = Input(Clock())
+    val ren   = Input(Bool())
+    val raddr = Input(UInt(64.W))
+    val rdata = Output(UInt(32.W))
+  })
+    setInline("IMemory.v",
+            """
+           |import "DPI-C" function void imem_read(input logic ren, input longint raddr, output int rdata);
+           |
+           |module IMemory(
+           |            input  clk,
+           |            input  ren,
+           |            input  [63:0] raddr,
+           |            output [31:0] rdata);
+           |
+           |  always @(*) begin
+           |    imem_read(ren, raddr, rdata);
+           |  end
+           |
+           |endmodule
+           |
+           |
+            """.stripMargin)
+}
+

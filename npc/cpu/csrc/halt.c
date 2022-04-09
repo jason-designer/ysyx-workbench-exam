@@ -1,8 +1,8 @@
 #include "halt.h"
 
-uint64_t *cpu_halt = NULL;
-void set_halt_ptr(const svOpenArrayHandle r) {
-  cpu_halt = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+uint64_t cpu_halt = NULL;
+void read_halt(unsigned char halt) {
+  cpu_halt = halt;
 }
 
 
