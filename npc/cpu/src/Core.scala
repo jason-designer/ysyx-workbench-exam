@@ -24,28 +24,56 @@ class Core extends Module{
     val dmem = new DmemIO
   })
 
-  val ifu = Module(new IFetch)
-  val idu = Module(new Decode)
-  val ieu = Module(new Execution)
-  val rfu = Module(new RegFile)
+  val preifu  = Module(new PreIFetch)
+  val ifu     = Module(new IFetch)
+  val idu     = Module(new Decode)
+  val ieu     = Module(new Execution)
+  val rfu     = Module(new RegFile)
+
+  val ifreg   = Module(new IFReg)
+  val idreg   = Module(new IDReg)
+  // val exereg  = Module(new ExeReg)
+  // val memreg  = Module(new MemReg)
+  // val wbreg   = Module(new WBReg)
   //
   rfu.io.clk    := clock
   rfu.io.reset  := reset
-  
-  //
-  ifu.io.imem <> io.imem
-  ifu.io.jump_en := idu.io.jump_en
-  ifu.io.jump_pc := idu.io.jump_pc
 
-  idu.io.pc       := ifu.io.pc
-  idu.io.inst     := ifu.io.inst
+  //
+  preifu.io.cur_pc  := ifreg.io.next_pc_out
+  preifu.io.jump_en := idu.io.jump_en
+  preifu.io.jump_pc := idu.io.jump_pc
+
+  ifreg.io.next_pc_in := preifu.io.next_pc
+  io.imem.en          := true.B
+  io.imem.addr        := preifu.io.next_pc
+  
+  ifu.io.pc_in    := ifreg.io.next_pc_out
+  ifu.io.inst_in  := io.imem.data
+
+  idreg.io.pc_in   := ifu.io.pc_out
+  idreg.io.inst_in := ifu.io.inst_out
+
+
+  ifreg.io.pr.valid_in := preifu.io.valid
+  idreg.io.pr.valid_in := ifreg.io.pr.valid_out
+  ifreg.io.pr.en := true.B
+  idreg.io.pr.en := true.B
+
+  //
+  // ifu.io.imem <> io.imem
+  // ifu.io.jump_en := idu.io.jump_en
+  // ifu.io.jump_pc := idu.io.jump_pc
+
+  idu.io.pc       := idreg.io.pc_out
+  idu.io.inst     := idreg.io.inst_out
   idu.io.decode_info <> ieu.io.decode_info
   idu.io.rs1_data := rfu.io.rs1_data
   idu.io.rs2_data := rfu.io.rs2_data
 
   ieu.io.op1 := idu.io.op1
   ieu.io.op2 := idu.io.op2
-  ieu.io.pc  := ifu.io.pc
+  ieu.io.pc  := idreg.io.pc_out
   ieu.io.imm := idu.io.imm
   ieu.io.dmem <> io.dmem
 
@@ -58,13 +86,15 @@ class Core extends Module{
   rfu.io.rd_data  := ieu.io.out
   
 
+  
+
   //debug
-  printf("pc=%x inst=%x wen=%d waddr=%d wdata=%x\n", ifu.io.pc, ifu.io.inst, idu.io.rd_en, idu.io.rd_addr, ieu.io.out)
+  printf("pc=%x inst=%x valid=%d wen=%d waddr=%d wdata=%x\n", idreg.io.pc_out, idreg.io.inst_out, idreg.io.pr.valid_out, idu.io.rd_en, idu.io.rd_addr, ieu.io.out)
   //halt
   val halt = Module(new Halt)
   halt.io.clk   := clock
   halt.io.reset := reset
-  halt.io.halt  := ifu.io.inst === EBREAK || ifu.io.inst === "h0000006b".U
+  halt.io.halt  := idreg.io.inst_out === EBREAK || idreg.io.inst_out === "h0000006b".U
 
 }
 
@@ -146,7 +176,7 @@ class IMemory extends BlackBox with HasBlackBoxInline{
            |            input  [63:0] raddr,
            |            output [31:0] rdata);
            |
-           |  always @(*) begin
+           |  always @(posedge clk) begin
            |    imem_read(ren, raddr, rdata);
            |  end
            |

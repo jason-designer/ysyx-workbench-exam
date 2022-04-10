@@ -10,7 +10,7 @@
 
 enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG, SDB_END_TIME};
 
-#define SIM_END_TIME 20000
+#define SIM_END_TIME 200
 
 typedef struct {
   bool fail;
@@ -100,9 +100,14 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
 
 int main(int argc, char** argv, char** env) {
     int program_num = argc - 2;
+    char* tfp_file = argv[1];
+    // 加载默认程序
+    if(program_num == 0){
+        sim_main(argc, argv, tfp_file, NULL);
+    }
+    // 回归测试
     Sdb_end_info *program_end_info[program_num];
     int fail_num = 0;
-    char* tfp_file = argv[1];
     // sim
     for(int i = 0; i < program_num; i++){
         char* img_file = argv[i + 2];

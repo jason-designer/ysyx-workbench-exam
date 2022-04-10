@@ -1,26 +1,34 @@
 import chisel3._
 
-class IFetch extends Module{
+class PreIFetch extends Module{
   val io = IO(new Bundle{
-    val imem = new ImemIO
-    val pc = Output(UInt(64.W))
-    val inst = Output(UInt(32.W))
     val jump_en = Input(Bool())
-    val jump_pc = Input(UInt(32.W))
-
+    val jump_pc = Input(UInt(64.W))
+    val cur_pc  = Input(UInt(64.W))
+    
+    val next_pc = Output(UInt(64.W))
+    val valid   = Output(Bool())
   })
+  val next_pc = RegInit("h80000000".U)
+  next_pc := Mux(io.jump_en, io.jump_pc, io.cur_pc + 4.U)
 
-  val pc = RegInit("h80000000".U)
-  pc := Mux(io.jump_en, io.jump_pc, pc + 4.U)
-
-  
-  io.imem.en    := true.B
-  io.imem.addr  := pc
-  io.pc         := pc
-  io.inst       := io.imem.data 
+  io.next_pc := next_pc
+  io.valid   := !reset.asBool()
 }
 
 
+
+class IFetch extends Module{
+  val io = IO(new Bundle{
+    val pc_in    = Input(UInt(64.W))
+    val inst_in  = Input(UInt(32.W))
+    val pc_out   = Output(UInt(64.W))
+    val inst_out = Output(UInt(32.W))
+  })
+
+  io.pc_out   := io.pc_in
+  io.inst_out := io.inst_in 
+}
 
 
 

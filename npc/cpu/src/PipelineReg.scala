@@ -15,7 +15,7 @@ class IFReg extends Module{
         val next_pc_out = Output(UInt(64.W))
     })
     val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val next_pc = RegEnable(io.next_pc_in, "h80000000".U, io.pr.en)
+    val next_pc = RegEnable(io.next_pc_in, 0.U, io.pr.en)
 
     io.pr.valid_out := valid
     io.next_pc_out := next_pc
@@ -33,8 +33,8 @@ class IDReg extends Module{
         val inst_out = Output(UInt(32.W))
     })
     val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val pc = RegEnable(io.pc_in, "h80000000".U(64.W), io.pr.en)
-    val inst = RegEnable(io.inst_in, "h00000000".U(32.W), io.pr.en)
+    val pc = RegEnable(io.pc_in, 0.U(64.W), io.pr.en)
+    val inst = RegEnable(io.inst_in, 0.U(32.W), io.pr.en)
 
     io.pr.valid_out := valid
     io.pc_out := pc
@@ -64,8 +64,8 @@ class ExeReg extends Module{
         val decode_info_out = new DecodeInfo
     })
     val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val pc = RegEnable(io.pc_in, "h80000000".U, io.pr.en)
-    val inst = RegEnable(io.inst_in, "h00000000".U, io.pr.en)
+    val pc = RegEnable(io.pc_in, 0.U(64.W), io.pr.en)
+    val inst = RegEnable(io.inst_in, 0.U(32.W), io.pr.en)
     val rd_en = RegEnable(io.rd_en_in, false.B)
     val rd_addr = RegEnable(io.rd_addr_in, 0.U(5.W), io.pr.en)
     val imm = RegEnable(io.imm_in, 0.U(64.W), io.pr.en)
@@ -127,8 +127,8 @@ class MemReg extends Module{
         val wmask_out = Output(UInt(8.W))
     })
     val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val pc = RegEnable(io.pc_in, "h80000000".U, io.pr.en)
-    val inst = RegEnable(io.inst_in, "h00000000".U, io.pr.en)
+    val pc = RegEnable(io.pc_in, 0.U(64.W), io.pr.en)
+    val inst = RegEnable(io.inst_in, 0.U(32.W), io.pr.en)
     val rd_en = RegEnable(io.rd_en_in, false.B, io.pr.en)
     val rd_addr = RegEnable(io.rd_addr_in, 0.U(5.W), io.pr.en)
     val out = RegEnable(io.out_in, 0.U(64.W), io.pr.en)
@@ -171,8 +171,8 @@ class WBReg extends Module{
     })
 
     val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val pc = RegEnable(io.pc_in, "h80000000".U, io.pr.en)
-    val inst = RegEnable(io.inst_in, "h00000000".U, io.pr.en)
+    val pc = RegEnable(io.pc_in, 0.U(64.W), io.pr.en)
+    val inst = RegEnable(io.inst_in, 0.U(32.W), io.pr.en)
     val rd_en = RegEnable(io.rd_en_in, false.B, io.pr.en)
     val rd_addr = RegEnable(io.rd_addr_in, 0.U(5.W), io.pr.en)
     val ren = RegEnable(io.ren_in, false.B, io.pr.en)
