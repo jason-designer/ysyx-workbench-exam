@@ -57,8 +57,9 @@ sim:
 	-Wno-LATCH                                      \
 	-v $(VSRC_DIR)/RegFile.v                        \
 	-v $(VSRC_DIR)/Halt.v                           \
-	-v $(VSRC_DIR)/DMemory.v                         \
+	-v $(VSRC_DIR)/DMemory.v                        \
 	-v $(VSRC_DIR)/IMemory.v                        \
+	-v $(VSRC_DIR)/Difftest.v                       \
 	-I $(CSRC_DIR)/halt.c                           \
 	-I $(CSRC_DIR)/memory.c                         \
 	-I $(CSRC_DIR)/reg.c                            \

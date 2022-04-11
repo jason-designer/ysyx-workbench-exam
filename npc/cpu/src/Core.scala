@@ -41,7 +41,7 @@ class Core extends Module{
   rfu.io.clk    := clock
   rfu.io.reset  := reset
   //
-  preifu.io.jump_en := flushdelay.io.jump_en
+  preifu.io.jump_en := flushdelay.io.preifu_jump_en
   preifu.io.jump_pc := idu.io.jump_pc
 
   ifreg.io.next_pc_in := preifu.io.next_pc
@@ -57,7 +57,7 @@ class Core extends Module{
   ifreg.io.pr.valid_in := preifu.io.valid
   idreg.io.pr.valid_in := ifreg.io.pr.valid_out
   ifreg.io.pr.en := true.B
-  idreg.io.pr.en := flushdelay.io.reg_en
+  idreg.io.pr.en := flushdelay.io.idreg_en
 
   flushdelay.io.in := idu.io.jump_en
 
@@ -88,14 +88,18 @@ class Core extends Module{
   rfu.io.rd_data  := ieu.io.out
   
 
+  val difftest_valid = idreg.io.pr.valid_out & flushdelay.io.exereg_valid
   //debug
-  printf("pc=%x inst=%x valid=%d wen=%d waddr=%d wdata=%x\n", idreg.io.pc_out, idreg.io.inst_out, idreg.io.pr.valid_out, idu.io.rd_en, idu.io.rd_addr, ieu.io.out)
+  printf("pc=%x inst=%x valid=%d wen=%d waddr=%d wdata=%x\n", idreg.io.pc_out, idreg.io.inst_out, difftest_valid, idu.io.rd_en, idu.io.rd_addr, ieu.io.out)
   //halt
   val halt = Module(new Halt)
   halt.io.clk   := clock
   halt.io.reset := reset
   halt.io.halt  := idreg.io.inst_out === EBREAK || idreg.io.inst_out === "h0000006b".U
-
+  //difftest
+  val difftest = Module(new Difftest)
+  difftest.io.valid := difftest_valid
+  difftest.io.pc := idreg.io.pc_out
 }
 
 
@@ -192,6 +196,31 @@ class IMemory extends BlackBox with HasBlackBoxInline{
            |
            |endmodule
            |
+           |
+            """.stripMargin)
+}
+
+
+
+class Difftest extends BlackBox with HasBlackBoxInline{
+  val io = IO(new Bundle{
+    val valid = Input(Bool())
+    val pc = Input(UInt(64.W))
+  })
+  setInline("Difftest.v",
+            """
+           |import "DPI-C" function void read_difftest_valid(input logic valid);
+           |import "DPI-C" function void read_pc(input longint pc);
+           |
+           |module Difftest(input valid,
+           |                input [63:0] pc);
+           |
+           |  always @(*) begin
+           |    read_difftest_valid(valid);
+           |    read_pc(pc);
+           |  end
+           |
+           |endmodule
            |
             """.stripMargin)
 }

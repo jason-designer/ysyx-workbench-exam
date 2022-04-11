@@ -5,6 +5,11 @@ uint64_t *cpu_gpr = NULL;
 void set_gpr_ptr(const svOpenArrayHandle r) {
   cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
 }
+uint64_t cpu_pc = 0;
+void read_pc(long long pc) {
+  cpu_pc = pc;
+}
+
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",

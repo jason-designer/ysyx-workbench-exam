@@ -11,6 +11,8 @@ typedef riscv64_CPU_state CPU_state;
 
 extern CPU_state cpu;
 
+extern uint64_t cpu_difftest_valid;
+extern "C" void read_difftest_valid(unsigned char valid);
 
 #define DIFFTEST_PORT 1234
 enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
@@ -20,5 +22,7 @@ void init_difftest(char *ref_so_file, uint64_t img_size, int port);
 bool difftest_step(uint64_t pc);
 bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc);
 void init_cpu();
+
+
 
 #endif

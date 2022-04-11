@@ -3,6 +3,13 @@
 #include "memory.h"
 #include "reg.h"
 
+
+uint64_t cpu_difftest_valid = 0;
+void read_difftest_valid(unsigned char valid) {
+  cpu_difftest_valid = valid;
+}
+
+
 CPU_state cpu = {.pc = 0x80000000};
 
 void (*ref_difftest_memcpy)(uint64_t addr, void *buf, uint64_t n, bool direction) = NULL;
@@ -88,5 +95,6 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc) {
 void init_cpu(){
     for(int i = 0; i < 32; i++) cpu.gpr[i] = 0;
     cpu.pc = RESET_VECTOR;
+    cpu_difftest_valid = 0;
 }
 

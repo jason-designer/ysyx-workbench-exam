@@ -188,9 +188,10 @@ class WBReg extends Module{
 
 class JumpFlushDelay extends Module{
     val io = IO(new Bundle{
-        val in  = Input(Bool())
-        val jump_en = Output(Bool())
-        val reg_en  = Output(Bool())
+        val in              = Input(Bool())
+        val preifu_jump_en  = Output(Bool())
+        val idreg_en        = Output(Bool())
+        val exereg_valid    = Output(Bool())
     })
     val s0 :: s1 :: s2 :: Nil = Enum(3)
     val state = RegInit(s0)
@@ -206,16 +207,17 @@ class JumpFlushDelay extends Module{
         }
     }
 
-    io.reg_en := MuxLookup(state, false.B, Array(
+    io.idreg_en := MuxLookup(state, false.B, Array(
         s0 -> !io.in,
         s1 -> false.B,
         s2 -> true.B
     ))
 
-    io.jump_en := MuxLookup(state, false.B, Array(
+    io.preifu_jump_en := MuxLookup(state, false.B, Array(
         s0 -> io.in,
         s1 -> false.B,
         s2 -> false.B
     ))
+    io.exereg_valid := state === s0
 }
 
