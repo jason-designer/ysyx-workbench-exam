@@ -10,7 +10,7 @@
 
 enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG, SDB_END_TIME};
 
-#define SIM_END_TIME 200
+#define SIM_END_TIME 20000
 
 typedef struct {
   bool fail;
@@ -53,14 +53,15 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         tfp->dump(contextp->time());
         //rtl debug
         if(sim_time >= 2 && sim_time % 2 == 0){
-            //halt
-            //printf("halt=%u\n", cpu_halt);
+            // halt
+            // printf("halt=%u\n", cpu_halt);
             if((uint8_t)cpu_halt == 1) {
                 Log("Detected ebreak, sim quit");
                 if(!cpu_gpr[10]) sdb_state = SDB_HIT_GOOD_TRAP;
                 else sdb_state = SDB_HIT_BAD_TRAP;
                 break;
             }
+
             
             //difftest
             // if(sim_time >= 4 && sim_time % 2 == 0){

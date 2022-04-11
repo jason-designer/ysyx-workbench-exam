@@ -30,6 +30,8 @@ class Core extends Module{
   val ieu     = Module(new Execution)
   val rfu     = Module(new RegFile)
 
+  val flushdelay = Module(new JumpFlushDelay)
+
   val ifreg   = Module(new IFReg)
   val idreg   = Module(new IDReg)
   // val exereg  = Module(new ExeReg)
@@ -38,10 +40,8 @@ class Core extends Module{
   //
   rfu.io.clk    := clock
   rfu.io.reset  := reset
-
   //
-  preifu.io.cur_pc  := ifreg.io.next_pc_out
-  preifu.io.jump_en := idu.io.jump_en
+  preifu.io.jump_en := flushdelay.io.jump_en
   preifu.io.jump_pc := idu.io.jump_pc
 
   ifreg.io.next_pc_in := preifu.io.next_pc
@@ -54,11 +54,13 @@ class Core extends Module{
   idreg.io.pc_in   := ifu.io.pc_out
   idreg.io.inst_in := ifu.io.inst_out
 
-
   ifreg.io.pr.valid_in := preifu.io.valid
   idreg.io.pr.valid_in := ifreg.io.pr.valid_out
   ifreg.io.pr.en := true.B
-  idreg.io.pr.en := true.B
+  idreg.io.pr.en := flushdelay.io.reg_en
+
+  flushdelay.io.in := idu.io.jump_en
+
 
   //
   // ifu.io.imem <> io.imem
@@ -84,8 +86,6 @@ class Core extends Module{
   rfu.io.rs2_addr := idu.io.rs2_addr
   rfu.io.rd_addr  := idu.io.rd_addr
   rfu.io.rd_data  := ieu.io.out
-  
-
   
 
   //debug
@@ -174,10 +174,20 @@ class IMemory extends BlackBox with HasBlackBoxInline{
            |            input  clk,
            |            input  ren,
            |            input  [63:0] raddr,
-           |            output [31:0] rdata);
+           |            output reg [31:0] rdata);
            |
+           |  wire [31:0] val; 
+           |
+           |  always @(*) begin
+           |    imem_read(ren, raddr, val);
+           |  end
+           |  
            |  always @(posedge clk) begin
-           |    imem_read(ren, raddr, rdata);
+           |    if (clk) begin
+           |      rdata <= val;
+           |    end else begin
+           |      rdata <= rdata;
+           |    end
            |  end
            |
            |endmodule

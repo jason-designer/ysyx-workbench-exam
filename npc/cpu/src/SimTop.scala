@@ -24,6 +24,20 @@ class SimTop extends Module{
   dmemory.io.wdata    := core.io.dmem.wdata
   dmemory.io.wmask    := core.io.dmem.wmask
 
+  
+  // val inst = Reg(UInt(32.W))
+  // inst := inst + "h100".U
+  // val pc = Reg(UInt(32.W))
+  // pc := pc + 4.U
+
+  // val idreg = Module(new IDReg)
+  // idreg.io.pr.valid_in := true.B
+  // idreg.io.pr.en := true.B
+  // idreg.io.pc_in := pc
+  // idreg.io.inst_in := inst
+
+  // printf("%d\n",idreg.io.inst_out)
+
 
 }
 
