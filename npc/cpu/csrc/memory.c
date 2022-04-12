@@ -7,14 +7,31 @@ uint64_t load_program(char* img_file){
     if (img_file == NULL) {
     Log("No image is given. Use the default build-in image.");
     uint32_t* m = (uint32_t*)mem;
+    // 无现关性冲突
     m[0] = 0x00000093;  //li  ra,0
     m[1] = 0x00000393;  //li  t2,0
     m[2] = 0x00200193;  //li  gp,2
-    m[3] = 0x00108713;  //addi    a4,ra,1
-    m[4] = 0x00708713;  //addi    a4,ra,7
-    m[5] = 0x00000513;  //li  a0,0
-    m[6] = 0x00100073;  //ebreak
-    return 28; // built-in image size
+    m[3] = 0x00000513;  //li  a0,0
+    m[4] = 0x00100073;  //ebreak
+    return 20;          // built-in image size
+    // 无现关性冲突的跳转用例
+    00200193            //li	gp,2
+    00000093          	//li	ra,0
+    00100113          	//li	sp,1
+    m[1] = 0x00000393;  //li  t2,0
+    m[3] = 0x00000513;  //li  a0,0
+    00209663    //bne	ra,sp,80000018
+    m[4] = 0x00100073;  //ebreak
+    return 20;          // built-in image size
+    // 现关性冲突
+    // m[0] = 0x00000093;  //li  ra,0
+    // m[1] = 0x00000393;  //li  t2,0
+    // m[2] = 0x00200193;  //li  gp,2
+    // m[3] = 0x00108713;  //addi    a4,ra,1
+    // m[4] = 0x00708713;  //addi    a4,ra,7
+    // m[5] = 0x00000513;  //li  a0,0
+    // m[6] = 0x00100073;  //ebreak
+    // return 28; // built-in image size
     }
     FILE *fp = fopen(img_file, "rb");
     assert(fp);
