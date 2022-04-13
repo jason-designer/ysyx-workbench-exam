@@ -67,24 +67,24 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
 
             
             // difftest
-            // if(start_difftest == false){  //这是为了跳过第一个valid
-            //     if(cpu_difftest_valid) {
-            //         start_difftest = true;
-            //         pre_pc = pc;
-            //         pc = cpu_pc;
-            //     }
-            // }
-            // else{
-            //     if(cpu_difftest_valid){
-            //         pre_pc = pc;
-            //         pc = cpu_pc;
-            //         isa_reg_update(pc, cpu_gpr);
-            //         if(!difftest_step(pre_pc)) {
-            //         sdb_state = SDB_DIFFTEST_WRONG;
-            //         break;
-            //     }
-            //     }
-            // }
+            if(start_difftest == false){  //这是为了跳过第一个valid
+                if(cpu_difftest_valid) {
+                    start_difftest = true;
+                    pre_pc = pc;
+                    pc = cpu_pc;
+                }
+            }
+            else{
+                if(cpu_difftest_valid){
+                    pre_pc = pc;
+                    pc = cpu_pc;
+                    isa_reg_update(pc, cpu_gpr);
+                    if(!difftest_step(pre_pc)) {
+                    sdb_state = SDB_DIFFTEST_WRONG;
+                    break;
+                }
+                }
+            }
         }
         
         contextp->timeInc(1);

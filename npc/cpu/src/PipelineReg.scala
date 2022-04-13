@@ -66,7 +66,7 @@ class ExeReg extends Module{
     val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
     val pc = RegEnable(io.pc_in, 0.U(64.W), io.pr.en)
     val inst = RegEnable(io.inst_in, 0.U(32.W), io.pr.en)
-    val rd_en = RegEnable(io.rd_en_in, false.B)
+    val rd_en = RegEnable(io.rd_en_in, false.B, io.pr.en)
     val rd_addr = RegEnable(io.rd_addr_in, 0.U(5.W), io.pr.en)
     val imm = RegEnable(io.imm_in, 0.U(64.W), io.pr.en)
     val op1 = RegEnable(io.op1_in, 0.U(64.W), io.pr.en)
