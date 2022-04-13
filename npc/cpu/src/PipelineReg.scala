@@ -224,6 +224,7 @@ class WBReg extends Module{
 
 class JumpFlushDelay extends Module{
     val io = IO(new Bundle{
+        val en              = Input(Bool())
         val in              = Input(Bool())
         val preifu_jump_en  = Output(Bool())
         val idreg_en        = Output(Bool())
@@ -233,7 +234,7 @@ class JumpFlushDelay extends Module{
     val state = RegInit(s0)
     switch(state){
         is(s0){
-            state := Mux(io.in, s1, s0)
+            state := Mux(io.en && io.in, s1, s0)
         }
         is(s1){
             state := s2
@@ -257,3 +258,37 @@ class JumpFlushDelay extends Module{
     io.exereg_valid := state === s0
 }
 
+
+class ImemoryReadHold extends Module{
+  val io = IO(new Bundle{
+    val ren         = Input(Bool())
+    val raddr       = Input(UInt(64.W))
+    val imem_ren    = Output(Bool())
+    val imem_raddr  = Output(UInt(64.W))
+  })
+  val raddr = RegEnable(io.raddr, 0.U, io.ren)
+  io.imem_raddr := Mux(io.ren, io.raddr, raddr)
+  io.imem_ren := true.B
+}
+
+
+class CorrelationConflict extends Module{
+    val io = IO(new Bundle{
+        val rs_valid    = Input(Bool())
+        val rd_valid    = Input(Bool())
+        val rs1_en      = Input(Bool())
+        val rs2_en      = Input(Bool())
+        val rs1_addr    = Input(UInt(5.W))
+        val rs2_addr    = Input(UInt(5.W))
+        val rd_en       = Input(Bool())
+        val rd_addr     = Input(UInt(5.W))
+
+        val conflict    = Output(Bool())
+    })
+    val inst_valid      = io.rs_valid && io.rd_valid
+    val rs1_conflict    = io.rs1_en && (io.rs1_addr === io.rd_addr)
+    val rs2_conflict    = io.rs2_en && (io.rs2_addr === io.rd_addr)
+    val rd_valid        = (io.rd_addr =/= 0.U) && io.rd_en
+
+    io.conflict := inst_valid && rd_valid && (rs1_conflict || rs2_conflict)
+}

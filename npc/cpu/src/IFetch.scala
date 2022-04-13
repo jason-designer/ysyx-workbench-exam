@@ -4,12 +4,13 @@ class PreIFetch extends Module{
   val io = IO(new Bundle{
     val jump_en = Input(Bool())
     val jump_pc = Input(UInt(64.W))
+    val stall   = Input(Bool())
     
     val next_pc = Output(UInt(64.W))
-    val valid   = Output(Bool())
+    val valid   = Output(Bool()) 
   })
   val next_pc = RegInit("h80000000".U)
-  next_pc := Mux(io.jump_en, io.jump_pc, next_pc + 4.U)
+  next_pc := Mux(io.stall, next_pc, Mux(io.jump_en, io.jump_pc, next_pc + 4.U))
 
   io.next_pc := next_pc
   io.valid   := !reset.asBool()
