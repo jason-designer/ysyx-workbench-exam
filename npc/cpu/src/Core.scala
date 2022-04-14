@@ -24,7 +24,7 @@ class Core extends Module{
     val dmem = new DmemIO
   })
 
-  val preifu  = Module(new PreIFetch)
+  // val preifu  = Module(new PreIFetch)
   val ifu     = Module(new IFetch)
   val idu     = Module(new Decode)
   val ieu     = Module(new Execution)
@@ -33,13 +33,13 @@ class Core extends Module{
   val amu     = Module(new AccessMemory)
   val wbu     = Module(new WriteBack)
 
-  val flushdelay       = Module(new JumpFlushDelay)
-  val imemrh           = Module(new ImemoryReadHold)
+  // val flushdelay       = Module(new JumpFlushDelay)
+  // val imemrh           = Module(new ImemoryReadHold)
   val cconflict_exereg = Module(new CorrelationConflict)
   val cconflict_memreg = Module(new CorrelationConflict)
   val cconflict_wbreg  = Module(new CorrelationConflict)
 
-  val ifreg   = Module(new IFReg)
+  //val ifreg   = Module(new IFReg)
   val idreg   = Module(new IDReg)
   val exereg  = Module(new ExeReg)
   val memreg  = Module(new MemReg)
@@ -47,23 +47,15 @@ class Core extends Module{
   //
   rfu.io.clk    := clock
   rfu.io.reset  := reset
-  //
-  preifu.io.jump_en := flushdelay.io.preifu_jump_en
-  preifu.io.jump_pc := idu.io.jump_pc
-  //ifreg
-  ifreg.io.next_pc_in := preifu.io.next_pc
-  imemrh.io.raddr := preifu.io.next_pc      //为imem添加ren为false时候的读保持功能
-  io.imem.en      := imemrh.io.imem_ren
-  io.imem.addr    := imemrh.io.imem_raddr
+ 
   //ifu
-  ifu.io.pc_in    := ifreg.io.next_pc_out
-  ifu.io.inst_in  := io.imem.data
+  ifu.io.jump_en  := idu.io.jump_en
+  ifu.io.jump_pc  := idu.io.jump_pc
+  ifu.io.pc       := idreg.io.pc_out
   //idreg
-  idreg.io.pc_in   := ifu.io.pc_out
-  idreg.io.inst_in := ifu.io.inst_out
+  idreg.io.imem <> io.imem
+  idreg.io.pc_in  := ifu.io.next_pc
   //idu
-  flushdelay.io.in := idu.io.jump_en
-
   idu.io.pc       := idreg.io.pc_out
   idu.io.inst     := idreg.io.inst_out
   idu.io.rs1_data := rfu.io.rs1_data
@@ -132,6 +124,7 @@ class Core extends Module{
   wbu.io.mdu_out := wbreg.io.mdu_out_out
   wbu.io.lu_out  := amu.io.lu_out
 
+
   //rfu
   rfu.io.rs1_en   := idu.io.rs1_en
   rfu.io.rs2_en   := idu.io.rs2_en
@@ -170,24 +163,21 @@ class Core extends Module{
   cconflict_wbreg.io.rd_en      := wbreg.io.rd_en_out
   cconflict_wbreg.io.rd_addr    := wbreg.io.rd_addr_out
 
+  //--------------------流水线控制------------------
+
   val stall = cconflict_exereg.io.conflict || cconflict_memreg.io.conflict || cconflict_wbreg.io.conflict
   //熄火的时候: 1.exereg的valid要为false.B
-  //          2.preifu维持原值
-  //          3.ifreg和idreg维持原值
+  //          2.ifu维持原值
+  //          3.idreg维持原值
+  
+  ifu.io.stall := stall
 
-  //流水线控制
-  preifu.io.stall := stall
-  flushdelay.io.en := !stall
-
-  ifreg.io.pr.valid_in  := preifu.io.valid
-  idreg.io.pr.valid_in  := ifreg.io.pr.valid_out
-  exereg.io.pr.valid_in := idreg.io.pr.valid_out && flushdelay.io.exereg_valid && (!stall)
+  idreg.io.pr.valid_in  := ifu.io.valid
+  exereg.io.pr.valid_in := idreg.io.pr.valid_out && (!stall)
   memreg.io.pr.valid_in := exereg.io.pr.valid_out
   wbreg.io.pr.valid_in  := memreg.io.pr.valid_out
   
-  ifreg.io.pr.en  := !stall
-  imemrh.io.ren   := !stall
-  idreg.io.pr.en  := flushdelay.io.idreg_en && (!stall)
+  idreg.io.pr.en  := !stall
   exereg.io.pr.en := true.B
   memreg.io.pr.en := true.B
   wbreg.io.pr.en  := true.B
@@ -204,7 +194,7 @@ class Core extends Module{
   //difftest
   val difftest = Module(new Difftest)
   difftest.io.valid := wbreg.io.pr.valid_out
-  difftest.io.pc := wbreg.io.pc_out
+  difftest.io.pc    := wbreg.io.pc_out
 }
 
 

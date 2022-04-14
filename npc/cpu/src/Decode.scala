@@ -171,7 +171,7 @@ class Decode extends Module{
     val imm_r = 0.U
     val imm_i = Cat(Fill(52, inst(31)), inst(31, 20))
     val imm_s = Cat(Fill(52, inst(31)), inst(31, 25), inst(11, 7))
-    val imm_b = Cat(Fill(43, inst(31)), inst(31), inst(7), inst(30, 25), inst(11, 8), 0.U)
+    val imm_b = Cat(Fill(51, inst(31)), inst(31), inst(7), inst(30, 25), inst(11, 8), 0.U)
     val imm_u = Cat(Fill(32, inst(31)), inst(31, 12), Fill(12, 0.U))
     val imm_j = Cat(Fill(43, inst(31)), inst(31), inst(19, 12), inst(20), inst(30, 21), 0.U)
     val imm = MuxLookup(inst_type, 0.U, Array(

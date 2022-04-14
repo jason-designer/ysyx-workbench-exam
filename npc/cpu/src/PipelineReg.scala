@@ -7,39 +7,30 @@ class PipelineRegIO extends Bundle{
     val en = Input(Bool())
 }
 
-
-class IFReg extends Module{
-    val io = IO(new Bundle{
-        val pr = new PipelineRegIO
-        val next_pc_in = Input(UInt(64.W))
-        val next_pc_out = Output(UInt(64.W))
-    })
-    val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val next_pc = RegEnable(io.next_pc_in, 0.U, io.pr.en)
-
-    io.pr.valid_out := valid
-    io.next_pc_out := next_pc
-
-}
-
-
 class IDReg extends Module{
     val io = IO(new Bundle{
+        val imem = new ImemIO
+
         val pr = new PipelineRegIO
         val pc_in = Input(UInt(64.W))
-        val inst_in = Input(UInt(32.W))
 
         val pc_out = Output(UInt(64.W))
         val inst_out = Output(UInt(32.W))
     })
-    val valid = RegEnable(io.pr.valid_in, false.B, io.pr.en)
-    val pc = RegEnable(io.pc_in, 0.U(64.W), io.pr.en)
-    val inst = RegEnable(io.inst_in, 0.U(32.W), io.pr.en)
+    val valid   = RegEnable(io.pr.valid_in, false.B, io.pr.en)
+    val pc      = RegEnable(io.pc_in, "h7ffffffc".U(64.W), io.pr.en)
+    
+    val imemrh  = Module(new ImemoryReadHold)
+    imemrh.io.ren   := io.pr.en
+    imemrh.io.raddr := io.pc_in
+    io.imem.en      := imemrh.io.imem_ren     
+    io.imem.addr    := imemrh.io.imem_raddr  
 
     io.pr.valid_out := valid
     io.pc_out := pc
-    io.inst_out := inst
+    io.inst_out := io.imem.data
 }
+
 
 class ExeReg extends Module{
     val io = IO(new Bundle{
@@ -219,46 +210,6 @@ class WBReg extends Module{
     io.lu_code_out := lu_code
     io.lu_shift_out := lu_shift
 
-}
-
-
-class JumpFlushDelay extends Module{
-    val io = IO(new Bundle{
-        val en              = Input(Bool())
-        val in              = Input(Bool())
-        val preifu_jump_en  = Output(Bool())
-        val idreg_en        = Output(Bool())
-        val exereg_valid    = Output(Bool())
-    })
-    val s0 :: s1 :: s2 :: Nil = Enum(3)
-    val state = RegInit(s0)
-    switch(state){
-        is(s0){
-            state := Mux(io.en && io.in, s1, s0)
-        }
-        is(s1){
-            state := s2
-        }
-        is(s2){
-            state := s0
-        }
-    }
-
-    io.idreg_en := MuxLookup(state, false.B, Array(
-        s0 -> !io.in,
-        s1 -> false.B,
-        s2 -> true.B
-    ))
-
-    io.preifu_jump_en := MuxLookup(state, false.B, Array(
-        s0 -> io.in,
-        s1 -> false.B,
-        s2 -> false.B
-    ))
-    
-    //1.当跳转冲刷完再给exereg赋值valid。
-    //2.非跳转的时候exereg是一直都valid的。（不考虑stall）
-    io.exereg_valid := (state === s0 && (!io.in)) || state === s2 
 }
 
 
