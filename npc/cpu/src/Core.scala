@@ -257,7 +257,7 @@ class DMemory extends BlackBox with HasBlackBoxInline{
            |            input  [63:0] wdata,
            |            input  [7:0]  wmask);
            |
-           |  always @(*) begin
+           |  always @(posedge clk) begin
            |    pmem_read(ren, raddr, rdata);
            |    pmem_write(wen, waddr, wdata, wmask);
            |  end

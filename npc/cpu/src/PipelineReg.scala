@@ -255,7 +255,10 @@ class JumpFlushDelay extends Module{
         s1 -> false.B,
         s2 -> false.B
     ))
-    io.exereg_valid := state === s0
+    
+    //1.当跳转冲刷完再给exereg赋值valid。
+    //2.非跳转的时候exereg是一直都valid的。（不考虑stall）
+    io.exereg_valid := (state === s0 && (!io.in)) || state === s2 
 }
 
 
