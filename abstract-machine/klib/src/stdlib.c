@@ -2,6 +2,7 @@
 #include <klib.h>
 #include <klib-macros.h>
 
+
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 static unsigned long int next = 1;
 
@@ -29,17 +30,32 @@ int atoi(const char* nptr) {
   return x;
 }
 
+// void *malloc(size_t size) {
+//   // On native, malloc() will be called during initializaion of C runtime.
+//   // Therefore do not call panic() here, else it will yield a dead recursion:
+//   //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
+// #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
+//   panic("Not implemented");
+// #endif
+//   return NULL;
+// }
+
 void *malloc(size_t size) {
   // On native, malloc() will be called during initializaion of C runtime.
   // Therefore do not call panic() here, else it will yield a dead recursion:
   //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-  panic("Not implemented");
+  uint8_t * res = heap.start;
+  heap.start = heap.start + size;
 #endif
-  return NULL;
+  return res;
 }
 
 void free(void *ptr) {
 }
+
+
+
+
 
 #endif

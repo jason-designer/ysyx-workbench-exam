@@ -18,11 +18,29 @@ static bool g_print_step = false;
 
 void device_update();
 
-/****************************************************/
+/************************ watchpoint ****************************/
 void watchpoint(){
 	if(check_watchpoint()) nemu_state.state = NEMU_STOP;
 }
-/***************************************************/
+/****************************************************************/
+/************************ iringbuf ******************************/
+// #define IRINGBUF_SIZE 50
+// char iringbuf[IRINGBUF_SIZE][30];
+// int iring_index = IRINGBUF_SIZE - 1;
+// void update_iringbuf(char* log){
+//   iring_index++;
+//   if(iring_index >= IRINGBUF_SIZE) iring_index = 0;
+//   strcpy(iringbuf[iring_index], log);
+// }
+// void print_iringbuf(){
+//   printf("-----------------iringbuf---------------\n");
+//   for(int i = 0; i < IRINGBUF_SIZE; i++){
+//     if(i == iring_index) printf("---> %s",iringbuf[i]);
+//     printf("     %s",iringbuf[i]);
+//   }
+//   printf("----------------------------------------\n");
+// }
+/****************************************************************/
 
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {

@@ -111,6 +111,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                     break;
           case '0' ... '9':
                     {
+                      //获取宽度和填充字符
                       int fchar = ' ', fwidth, ftype;
                       if(*(f+1) >= '0' && *(f+1) <= '9'){
                         fchar = *f;
@@ -123,7 +124,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                       }
                       //
                       switch(ftype){
-                        case 'd':
+                        case 'd': 
                                   {
                                     char buf[32];
                                     n = _itoa(va_arg(ap,int),buf);
@@ -137,6 +138,28 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                       memcpy(s,buf2,n);
                                     }
                                     else memcpy(s,buf,n);
+                                  }
+                                  break;
+                        case 'x':
+                                  {
+                                    char buf_final[66];//加上0x
+                                    buf_final[0]='0';
+                                    buf_final[1]='x';
+                                    char buf[64];//16进制数
+                                    n = _ui2a(va_arg(ap,uint64_t), buf, 16);
+                                    //
+                                    if(n < fwidth){
+                                      char buf2[fwidth];//宽度补全的16进制数
+                                      for(int i = 0; i < fwidth; i++){
+                                        if(i < (fwidth - n)) buf2[i] = fchar;
+                                        else buf2[i] = buf[i - fwidth + n];
+                                      }
+                                      n = fwidth;
+                                      strcpy(buf_final+2, buf2);
+                                    }
+                                    else strcpy(buf_final+2, buf);
+                                    n += 2;
+                                    memcpy(s,buf_final,n);
                                   }
                                   break;
                         default : 
