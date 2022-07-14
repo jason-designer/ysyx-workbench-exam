@@ -41,12 +41,124 @@ void watchpoint(){
 //   printf("----------------------------------------\n");
 // }
 /****************************************************************/
+/************************ ftrace ******************************/
+#include <stdio.h>
+#include <elf.h>
+
+typedef struct{
+  char* name;
+  uint64_t addr_start;
+  uint64_t addr_end;
+}func_info;
+int func_num = 0;
+func_info *fc;
+int call_times = 0;
+// ftrace
+char* ftrace_log = "/home/zgs/project/ysyx-workbench/nemu/build/ftrace-log.txt";
+FILE* ftrace_fp; 
+
+func_info* decode_elf(char* elf_file_name){
+  assert(elf_file_name != NULL);
+  FILE *fp;
+  // get elf size
+  fp = fopen(elf_file_name, "r");
+  fseek(fp, 0L, SEEK_END);
+  int elf_size = ftell(fp);
+  // copy elf file to char *
+  char elf[elf_size];
+  fseek(fp, 0, SEEK_SET);
+  fread(&elf, 1, elf_size, fp);
+  fclose(fp);
+  // read elf header table
+  Elf64_Ehdr ehdr;
+  memcpy(&ehdr, elf, sizeof(Elf64_Ehdr));
+  // read section header table
+  Elf64_Shdr shdr[ehdr.e_shnum];
+  memcpy(&shdr, elf + ehdr.e_shoff, sizeof(Elf64_Shdr)*ehdr.e_shnum);
+  // find the offset of strtab and symtab
+  Elf64_Shdr shdr_sym;
+  for(int i = 0; i < ehdr.e_shnum; i++) {
+    if(shdr[i].sh_type == SHT_SYMTAB) shdr_sym = shdr[i];
+  }
+  Elf64_Shdr shdr_str;
+  for(int i = 0; i < ehdr.e_shnum; i++) {
+    if(shdr[i].sh_type == SHT_STRTAB) {
+      shdr_str = shdr[i];
+      break;
+    }
+  }
+  // read symtab
+  int symtab_num = shdr_sym.sh_size / sizeof(Elf64_Sym);
+  Elf64_Sym sym[symtab_num];
+  memcpy(&sym, elf + shdr_sym.sh_offset, shdr_sym.sh_size);
+  // find FUNC in symtab, find the name of FUNC and the addr of FUNC
+  // 计算有多少个FUNC
+  for(int i = 0; i < symtab_num; i++) {   
+    if(sym[i].st_info == 18)  func_num++; // is FUNC
+  }
+  // 记录FUNC
+  func_info* fc;
+  fc = (func_info*)malloc(sizeof(func_info) * func_num);
+  for(int i = 0, j = 0; i < symtab_num; i++) {   
+    if(sym[i].st_info == 18){   // is FUNC
+      fc[j].addr_start = sym[i].st_value;
+      fc[j].addr_end = sym[i].st_value + sym[i].st_size; 
+      char* str = elf + shdr_str.sh_offset + sym[i].st_name;
+      char* name = (char*)malloc(strlen(str) + 1);  // '0'
+      strcpy(name, str);
+      fc[j].name = name;
+      j++;
+    }  
+  }
+  return fc;
+}
+
+#define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog
+#define SEXT(x, len) ({ struct { int64_t n : len; } __x = { .n = x }; (int64_t)__x.n; })
+word_t immj(uint32_t i) { return SEXT(BITS(i, 31, 31), 1) << 20 | (BITS(i, 30, 21) << 1) | (BITS(i, 20, 20) << 11) | (BITS(i, 19, 12) << 12); }
+int is_call(uint64_t pc, uint32_t inst){    // return index of fc
+  uint64_t imm = immj(inst);
+  uint64_t jump_pc = imm + pc;
+  if((inst & 0xfff) == 0x0ef){
+    int i;
+    for(i = 0; i < func_num; i++){
+      if(fc[i].addr_start == jump_pc) break;
+    }
+    if(i < func_num) return i;
+  }
+  return -1;
+}
+
+char* find_func_name(uint64_t addr){    // find func name according to addr
+  int i;
+  for(i = 0; i < func_num; i++){
+    if(fc[i].addr_start <= addr && fc[i].addr_end > addr) return fc[i].name;
+  }
+  return NULL;
+}
+
+void ftrace(uint64_t pc, uint32_t inst){
+  if(inst == 0x00008067){
+    fprintf(ftrace_fp, "%x: %*cret  [%s]\n", (uint32_t)pc, 2*call_times, ' ', find_func_name(cpu.gpr[1]));
+    call_times--;
+  }
+  int fc_index = is_call(pc, inst);
+  if(fc_index != -1){
+    call_times++;
+    fprintf(ftrace_fp, "%x: %*ccall [%s@%x]\n", (uint32_t)pc, 2*call_times, ' ', fc[fc_index].name, (uint32_t)fc[fc_index].addr_start);
+  }
+}
+
+
+/**************************************************************/
+
 
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
+  ftrace(_this->pc, _this->isa.inst.val);
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   IFDEF(CONFIG_WATCHPOINT, watchpoint());

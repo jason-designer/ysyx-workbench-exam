@@ -51,6 +51,13 @@ static long load_img() {
   return size;
 }
 
+typedef struct{
+  char* name;
+  uint64_t addr_start;
+  uint64_t addr_end;
+}func_info;
+extern func_info* decode_elf(char* elf_file_name);
+
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
@@ -67,7 +74,24 @@ static int parse_args(int argc, char *argv[]) {
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
-      case 1: img_file = optarg; return 0;
+      case 1:   img_file = optarg;
+                // load elf file name to elf_file (define in cpu-exec.c)
+                char* elf_file;
+                int img_name_size = strlen(img_file);
+                elf_file =(char*)malloc(img_name_size + 1);
+                strcpy(elf_file, img_file);
+                elf_file[img_name_size-3] = 'e';
+                elf_file[img_name_size-2] = 'l';
+                elf_file[img_name_size-1] = 'f';
+                // decode elf
+                extern func_info* fc;
+                fc = decode_elf(elf_file);
+                free(elf_file);
+                // open ftrace log file
+                extern char* ftrace_log;
+                extern FILE* ftrace_fp;
+                ftrace_fp = fopen(ftrace_log, "w");
+                return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");

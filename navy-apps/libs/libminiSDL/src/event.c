@@ -33,8 +33,8 @@ int SDL_PollEvent(SDL_Event *ev) {
         break;
       }
     }
-  printf("---%d\n",ev->key.keysym.sym);
-  printf("---%d\n", ev->key.type);
+  // printf("---%d\n",ev->key.keysym.sym);
+  // printf("---%d\n", ev->key.type);
   return 1;
 }
 
@@ -55,8 +55,8 @@ int SDL_WaitEvent(SDL_Event *event) {
         break;
       }
     }
-  printf("---%d\n",event->key.keysym.sym);
-  printf("---%d\n", event->key.type);
+  // printf("---%d\n",event->key.keysym.sym);
+  // printf("---%d\n", event->key.type);
   return 1;
 }
 
