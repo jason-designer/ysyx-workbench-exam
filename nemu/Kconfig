@@ -218,3 +218,11 @@ config WATCHPOINT
 	default n
 
 endmenu
+
+menu "Trace"
+
+config FTRACE
+	bool "Enable ftrace"
+	default n
+
+endmenu

@@ -139,6 +139,7 @@ char* find_func_name(uint64_t addr){    // find func name according to addr
 
 void ftrace(uint64_t pc, uint32_t inst){
   if(inst == 0x00008067){
+    assert(ftrace_fp);
     fprintf(ftrace_fp, "%x: %*cret  [%s]\n", (uint32_t)pc, 2*call_times, ' ', find_func_name(cpu.gpr[1]));
     call_times--;
   }
@@ -158,7 +159,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-  ftrace(_this->pc, _this->isa.inst.val);
+  IFDEF(CONFIG_FTRACE, ftrace(_this->pc, _this->isa.inst.val));
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   IFDEF(CONFIG_WATCHPOINT, watchpoint());
