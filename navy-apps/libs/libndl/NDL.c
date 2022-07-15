@@ -19,7 +19,7 @@ uint32_t NDL_GetTicks() {
 }
 
 int NDL_PollEvent(char *buf, int len) {
-  int fd = open("/dev/keyboard", O_RDONLY);
+  int fd = open("/dev/events", O_RDONLY);
   int size = read(fd, buf, len);
   close(fd);
   return size != 0;
