@@ -19,7 +19,7 @@
 int do_sys_gettimeofday(struct timeval *ptimeval, void *ptimezone){
   uint64_t us = io_read(AM_TIMER_UPTIME).us;
   ptimeval->tv_sec = us / 1000000;
-  ptimeval->tv_usec = us; 
+  ptimeval->tv_usec = us - ptimeval->tv_sec * 1000000;
   return 0;
 }
 
