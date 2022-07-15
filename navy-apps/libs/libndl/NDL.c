@@ -9,7 +9,7 @@
 
 static int evtdev = -1;
 static int fbdev = -1;
-static int screen_w = 0, screen_h = 0;
+static int canvas_w = 0, canvas_h = 0;
 static int W = 0, H = 0;
 
 uint32_t NDL_GetTicks() {
@@ -34,24 +34,28 @@ void NDL_OpenCanvas(int *w, int *h) {
   sscanf(dbuf, "WIDTH :%d\nHEIGHT:%d", &width, &height);
   W = width;
   H = height;
-  screen_w = *w; screen_h = *h;
-  if(screen_w == 0 && screen_h == 0){
-    screen_w = W;
-    screen_h = H;
+  canvas_w = *w; canvas_h = *h;
+  if(canvas_w == 0 && canvas_h == 0){
+    canvas_w = W;
+    canvas_h = H;
+    *w = W;
+    *h = H;
   }
-  assert(screen_w <= W && screen_h <= H && screen_w > 0 && screen_h > 0);
+  assert(canvas_w <= W && canvas_h <= H && canvas_w > 0 && canvas_h > 0);
   //
   if (getenv("NWM_APP")) {
     int fbctl = 4;
     fbdev = 5;
-    screen_w = *w; screen_h = *h;
-    if(screen_w == 0 && screen_h == 0){
-      screen_w = W;
-      screen_h = H;
+    canvas_w = *w; canvas_h = *h;
+    if(canvas_w == 0 && canvas_h == 0){
+      canvas_w = W;
+      canvas_h = H;
+      *w = W;
+      *h = H;
     }
-    assert(screen_w <= W && screen_h <= H && screen_w > 0 && screen_h > 0);
+    assert(canvas_w <= W && canvas_h <= H && canvas_w > 0 && canvas_h > 0);
     char buf[64];
-    int len = sprintf(buf, "%d %d", screen_w, screen_h);
+    int len = sprintf(buf, "%d %d", canvas_w, canvas_h);
     // let NWM resize the window and create the frame buffer
     write(fbctl, buf, len);
     while (1) {
@@ -65,17 +69,35 @@ void NDL_OpenCanvas(int *w, int *h) {
   }
 }
 
+// void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) { 
+//   //buf前四个元素放xywh，剩下的复制pixels.
+//   int size = w * h;
+//   uint32_t* buf = (uint32_t *)malloc(4 * (size + 4));//必须用malloc才行，用数组会有奇怪的问题。
+//   buf[0] = x + W/2 - canvas_w/2; 
+//   buf[1] = y + H/2 - canvas_h/2;
+//   buf[2] = w;
+//   buf[3] = h;
+//   for(int i = 0; i < size; i++) buf[i+4] = pixels[i];
+//   int fd = open("/dev/fb", O_WRONLY);
+//   write(fd, buf, 4 * (size + 4));
+//   close(fd);
+// }
+
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) { 
-  //buf前四个元素放xywh，剩下的复制pixels.
-  int size = w * h;
-  uint32_t* buf = (uint32_t *)malloc(4 * (size + 4));//必须用malloc才行，用数组会有奇怪的问题。
-  buf[0] = x + W/2 - screen_w/2; //三
-  buf[1] = y + H/2 - screen_h/2;
-  buf[2] = w;
-  buf[3] = h;
-  for(int i = 0; i < size; i++) buf[i+4] = pixels[i];
+  int canvas_xmin = W/2 - canvas_w/2;
+  int canvas_xmax = W/2 + canvas_w/2;
+  int canvas_ymin = H/2 - canvas_h/2;
+  int canvas_ymax = H/2 + canvas_h/2;
+  assert(w <= canvas_w && h <= canvas_h);
+  int i, j;
+  uint32_t* p = pixels;
+
   int fd = open("/dev/fb", O_WRONLY);
-  write(fd, buf, 4 * (size + 4));
+  for(j = canvas_ymin + y; j < canvas_ymin + y + h; j++){
+    lseek(fd, 4 * (j * W + canvas_xmin + x), SEEK_SET);
+    write(fd, p, 4 * w);
+    p += w;
+  }
   close(fd);
 }
 
