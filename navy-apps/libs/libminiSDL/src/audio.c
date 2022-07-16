@@ -14,7 +14,7 @@ void SDL_CloseAudio() {
 }
 
 void SDL_PauseAudio(int pause_on) {
-  assert(0);
+  // assert(0);
 }
 
 void SDL_MixAudio(uint8_t *dst, uint8_t *src, uint32_t len, int volume) {
@@ -31,9 +31,9 @@ void SDL_FreeWAV(uint8_t *audio_buf) {
 }
 
 void SDL_LockAudio() {
-  assert(0);
+  // assert(0);
 }
 
 void SDL_UnlockAudio() {
-  assert(0);
+  // assert(0);
 }

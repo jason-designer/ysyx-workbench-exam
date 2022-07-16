@@ -88,7 +88,7 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
   int canvas_xmax = W/2 + canvas_w/2;
   int canvas_ymin = H/2 - canvas_h/2;
   int canvas_ymax = H/2 + canvas_h/2;
-  assert(w <= canvas_w && h <= canvas_h);
+  assert(((x + w) <= canvas_w) && ((y + h) <= canvas_h));
   int i, j;
   uint32_t* p = pixels;
 

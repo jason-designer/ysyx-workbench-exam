@@ -10,8 +10,11 @@
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
-  uint32_t* dp = (uint32_t*)dst->pixels;
-  uint32_t* sp = (uint32_t*)src->pixels;
+  uint32_t* dp32 = (uint32_t*)dst->pixels;
+  uint32_t* sp32 = (uint32_t*)src->pixels;
+  uint8_t* dp8 = (uint8_t*)dst->pixels;
+  uint8_t* sp8 = (uint8_t*)src->pixels;
+
   int dx, dy, dw, dh, sx, sy, sw, sh;
   if(dstrect != NULL && srcrect != NULL){
     dx = dstrect->x; dy = dstrect->y; dw = dstrect->w; dh = dstrect->h;
@@ -35,12 +38,14 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   int i, j;
   for(j = 0; j < sh; j++){
     for(i = 0; i < sw; i++){
-      dp[(dx + i) + dst->w * (dy + j)] = sp[(sx + i) + src->w * (sy + j)];
+      if(dst->format->BitsPerPixel == 32) dp32[(dx + i) + dst->w * (dy + j)] = sp32[(sx + i) + src->w * (sy + j)];
+      else if(dst->format->BitsPerPixel == 8) dp8[(dx + i) + dst->w * (dy + j)] = sp8[(sx + i) + src->w * (sy + j)];
     }
   }
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  assert(dst->format->BitsPerPixel == 32);
   int x, y, w, h;
   if(dstrect == NULL){
     x = 0;
@@ -61,12 +66,36 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   }
 }
 
+uint32_t* pixel8_to_pixel32(SDL_Surface *s){
+  int w = s->w;
+  int h = s->h;
+  int size = w * h;
+  uint32_t* p = (uint32_t*)malloc(size * 4);
+  for(int i = 0; i < size; i++){
+    uint32_t r = s->format->palette->colors[s->pixels[i]].r;
+    uint32_t g = s->format->palette->colors[s->pixels[i]].g;
+    uint32_t b = s->format->palette->colors[s->pixels[i]].b;
+    uint32_t a = s->format->palette->colors[s->pixels[i]].a;
+    uint32_t val = s->format->palette->colors[s->pixels[i]].val;
+    uint32_t c = (r << 16) | (g << 8) | (b);
+    p[i] = c;
+  }
+  return p;
+}
+
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   //assert(0);
-  uint32_t * p = (uint32_t *)s->pixels;
+  uint32_t* p;
+  if(s->format->BitsPerPixel == 32){      // 32bits pixel
+    p = (uint32_t *)s->pixels;
+  }
+  else if(s->format->BitsPerPixel == 8){  // 8bits p78ixel
+    p = pixel8_to_pixel32(s);
+  }
   NDL_OpenCanvas(&(s->w), &(s->h));
   if(x ==0 && y ==0 && w ==0 && h ==0) NDL_DrawRect(p, 0, 0, s->w, s->h);
   else NDL_DrawRect(p, x, y, w, h);
+  if(s->format->BitsPerPixel == 8) free(p);
 }
 
 // APIs below are already implemented.
