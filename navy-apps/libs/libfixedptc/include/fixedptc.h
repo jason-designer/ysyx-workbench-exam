@@ -73,6 +73,7 @@
 #endif
 
 #include <stdint.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,34 +128,42 @@ typedef	__uint128_t fixedptud;
 
 /* Multiplies a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_muli(fixedpt A, int B) {
-	return 0;
+	// assert(0);
+	return A * fixedpt_fromint(B) / 0x100;
 }
 
 /* Divides a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_divi(fixedpt A, int B) {
-	return 0;
+	// assert(0);
+	return A / fixedpt_fromint(B)  * 0x100;
 }
 
 /* Multiplies two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_mul(fixedpt A, fixedpt B) {
-	return 0;
+	// assert(0);
+	return A * B / 0x100;
 }
 
 
 /* Divides two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_div(fixedpt A, fixedpt B) {
-	return 0;
+	// assert(0);
+	return A / B * 0x100;
 }
 
 static inline fixedpt fixedpt_abs(fixedpt A) {
-	return 0;
+	// assert(0);
+	if(A < 0) return -A;
+	else return A;
 }
 
 static inline fixedpt fixedpt_floor(fixedpt A) {
+	assert(0);
 	return 0;
 }
 
 static inline fixedpt fixedpt_ceil(fixedpt A) {
+	assert(0);
 	return 0;
 }
 
