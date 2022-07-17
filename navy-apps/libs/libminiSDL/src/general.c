@@ -3,6 +3,8 @@
 
 int SDL_Init(uint32_t flags) {
   //assert(0);
+  extern uint32_t SDL_StartTime;
+  SDL_StartTime = NDL_GetTicks();
   return NDL_Init(flags);
 }
 
