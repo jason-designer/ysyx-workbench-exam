@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
 
   /* free pointer */
   // free ftrace
+  #ifdef CONFIG_FTRACE
   typedef struct{
     char* name;
     uint64_t addr_start;
@@ -30,6 +31,7 @@ int main(int argc, char *argv[]) {
   free(fc);
   extern FILE* ftrace_fp;
   fclose(ftrace_fp);
+  #endif
   /* */
   return is_exit_status_bad();
 }

@@ -163,10 +163,10 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 110 ????? 01110 11", remw   , R, R(dest) = sext((int32_t)src1 % (int32_t)src2, 4); );
   INSTPAT("0000001 ????? ????? 111 ????? 01110 11", remuw  , R, R(dest) = sext((uint32_t)src1 % (uint32_t)src2, 4); );
   //csr
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, s->dnpc = isa_raise_intr(cpu.gpr[17], cpu.pc); difftest_skip_ref(); );
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, s->dnpc = isa_raise_intr(0xb, cpu.pc); );//difftest_skip_ref(); );
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, word_t t = read_csr(src2); write_csr(src2, src1);  R(dest) = t; );
-  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, word_t t = read_csr(src2); write_csr(src2, t | src1);  R(dest) = t; difftest_skip_ref(); );
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , R, s->dnpc = read_csr(0x341) + 4; difftest_skip_ref(); );
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, word_t t = read_csr(src2); write_csr(src2, t | src1);  R(dest) = t; );//difftest_skip_ref(); );
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , R, s->dnpc = read_csr(0x341); );//difftest_skip_ref(); );
 
 
   //other
