@@ -12,7 +12,6 @@
 
 enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG, SDB_END_TIME};
 
-#define SIM_END_TIME 40000
 #define SIM_RESET_TIME 2
 
 typedef struct {
@@ -64,7 +63,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     bool start_difftest = false;
     uint64_t pc = 0;
     uint64_t pre_pc = 0;
-    while (sim_time < SIM_END_TIME) { 
+    while (1) { 
         top->reset = sim_time < SIM_RESET_TIME ? 1 : 0;
         top->clock = sim_time % 2;
 

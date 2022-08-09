@@ -83,4 +83,17 @@ wave:
 	gtkwave $(WAVEFORM_DIR)/sim_main.vcd
 
 
+#更新am-test测试文件
+
+update_am_test:
+	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=h
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/hello/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/hello/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/hello/
+
+	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=t
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/rtc/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/rtc/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/rtc/
+
 include ../Makefile
