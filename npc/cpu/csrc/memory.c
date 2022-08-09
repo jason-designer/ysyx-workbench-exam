@@ -5,7 +5,7 @@ uint8_t* mem = (uint8_t*)malloc(MEM_SIZE);
 
 uint64_t load_program(char* img_file){
     if (img_file == NULL) {
-    Log("No image is given. Use the default build-in image.");
+    Logc(ASNI_FG_RED,"No image is given. Use the default build-in image.");
     uint32_t* m = (uint32_t*)mem;
     //无现关性冲突--------------------------------
     // m[0] = 0x00000093;  //li  ra,0
@@ -74,6 +74,11 @@ uint64_t read_memory(uint64_t addr, int length){
 
 void write_memory(uint64_t addr, uint64_t data, int length){
     //if(addr == 0) return;
+    if(addr==0xa00003f8){
+        char c = data;
+        printf("%c",c);
+        return;
+    }
     assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
     switch(length){
         case 1: *(uint8_t*)(mem + addr - RESET_VECTOR) = (uint8_t)data; break;

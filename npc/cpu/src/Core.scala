@@ -184,14 +184,14 @@ class Core extends Module{
 
 
   
-  //debug
-  printf("pc=%x inst=%x valid=%d wen=%d waddr=%d wdata=%x stall=%d\n", wbreg.io.pc_out, wbreg.io.inst_out, wbreg.io.pr.valid_out, wbreg.io.rd_en_out, wbreg.io.rd_addr_out, wbu.io.out, stall)
-  //halt
+  // debug
+  //printf("pc=%x inst=%x valid=%d wen=%d waddr=%d wdata=%x stall=%d\n", wbreg.io.pc_out, wbreg.io.inst_out, wbreg.io.pr.valid_out, wbreg.io.rd_en_out, wbreg.io.rd_addr_out, wbu.io.out, stall)
+  // halt
   val halt = Module(new Halt)
   halt.io.clk   := clock
   halt.io.reset := reset
   halt.io.halt  := wbreg.io.inst_out === EBREAK || wbreg.io.inst_out === "h0000006b".U
-  //difftest
+  // difftest
   val difftest = Module(new Difftest)
   difftest.io.valid := wbreg.io.pr.valid_out
   difftest.io.pc    := wbreg.io.pc_out

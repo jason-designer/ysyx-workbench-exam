@@ -48,6 +48,9 @@ endif
 ifdef SIMALL
 IMG_FILE = $(ALL3_TEST_FILE) $(ALL4_TEST_FILE)
 endif
+ifdef ALL
+IMG_FILE = $(NPC_HOME)/bin/$(ALL)
+endif
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!

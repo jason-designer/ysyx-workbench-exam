@@ -7,6 +7,8 @@
 #include "reg.h"
 #include "difftest.h"
 
+// config
+//#define DIFFTEST
 
 enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG, SDB_END_TIME};
 
@@ -49,8 +51,11 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     /****************************************************************************/
 
     uint64_t size = load_program(img_file);
+
+    #ifdef DIFFTEST
     //init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
+    #endif
 
     int sdb_state = SDB_RUNNING;
     int sim_time = 0;                             // sim time
@@ -82,6 +87,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
 
             
             // difftest
+            #ifdef DIFFTEST
             if(start_difftest == false){  //这是为了跳过第一个valid
                 if(cpu_difftest_valid) {
                     start_difftest = true;
@@ -101,6 +107,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 }
                 }
             }
+            #endif
         }
         
         contextp->timeInc(1);
@@ -108,10 +115,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     }
     if(sim_time >= SIM_END_TIME) sdb_state = SDB_END_TIME;
     switch(sdb_state){
-        case SDB_HIT_GOOD_TRAP:  Logc(ASNI_FG_GREEN,"halt good trap"); break;
-        case SDB_HIT_BAD_TRAP:   Logc(ASNI_FG_RED,"halt bad trap"); break;
-        case SDB_DIFFTEST_WRONG: Logc(ASNI_FG_RED, "difftest detect wrong, sim quit"); break;
-        case SDB_END_TIME: Logc(ASNI_FG_RED, "out of sim time"); break;
+        case SDB_HIT_GOOD_TRAP:     Logc(ASNI_FG_GREEN,"hit good trap"); break;
+        case SDB_HIT_BAD_TRAP:      Logc(ASNI_FG_RED,"hit bad trap"); break;
+        case SDB_DIFFTEST_WRONG:    Logc(ASNI_FG_RED, "difftest detect wrong, sim quit"); break;
+        case SDB_END_TIME:          Logc(ASNI_FG_RED, "out of sim time"); break;
     }
     int fail = 1;
     if(sdb_state == SDB_HIT_GOOD_TRAP) fail = 0;
@@ -152,6 +159,7 @@ int main(int argc, char** argv, char** env) {
         fail_num += program_end_info[i]->fail;
     }
     // printf result
+    printf("------------------------simulation report------------------------\n");
     for(int i = 0; i < program_num; i++){
         info = program_end_info[i];
         printf("%-30s: simtime=%6ld  ipc=%f ", info->program_name, info->sim_time, info->ipc);
@@ -162,5 +170,5 @@ int main(int argc, char** argv, char** env) {
     }
     double ipc = (double)total_inst / (double)total_clock;
     printf("total program number:%d, fail:%d, IPC=%f \n", program_num, fail_num, ipc);
-
+    printf("-----------------------------------------------------------------\n");
 }
