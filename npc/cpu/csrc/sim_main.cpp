@@ -9,8 +9,9 @@
 
 // config
 //#define DIFFTEST
+//#define TRACE
 
-enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG, SDB_END_TIME};
+enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG};
 
 #define SIM_RESET_TIME 2
 
@@ -37,18 +38,14 @@ char* get_program_name(char* img_file){
 Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     VerilatedContext* contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
-    VSimTop* top = new VSimTop{contextp};                 // top is the name of Module
+    VSimTop* top = new VSimTop{contextp};           // top is the name of Module
     //trace on
     Verilated::traceEverOn(true);                   // open trace, so that it can generate waveforms
     VerilatedVcdC* tfp = new VerilatedVcdC;         // it is used for generating waveforms
     top->trace(tfp, 99);                            // Trace 99 levels of hierarchy,1 level means only trace top level signals
-    //get arg
-    //char* tfp_file = argv[1];
-    //char* img_file = argv[2];
-    //set the path of vcd
-    tfp->open(tfp_file);   // set the path of the vcd file, you need to mkdir before running it
+    tfp->open(tfp_file);                            // set the path of the vcd file, you need to mkdir before running it
     /****************************************************************************/
-
+    setbuf(stdout, NULL);
     uint64_t size = load_program(img_file);
 
     #ifdef DIFFTEST
@@ -71,8 +68,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         //if(sim_time % 2 == 1) pre_pc = pc;
         //pc = top->io_imem_addr;
         //if(sim_time % 2 == 1)top->io_imem_data = read_memory(pc, 4);                                                              
-        top->eval();                                
+        top->eval();          
+        #ifdef TRACE                      
         tfp->dump(contextp->time());
+        #endif
         //rtl debug
         if(sim_time >= SIM_RESET_TIME && sim_time % 2 == 0){
             // halt
@@ -112,12 +111,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         contextp->timeInc(1);
         sim_time++;
     }
-    if(sim_time >= SIM_END_TIME) sdb_state = SDB_END_TIME;
     switch(sdb_state){
         case SDB_HIT_GOOD_TRAP:     Logc(ASNI_FG_GREEN,"hit good trap"); break;
         case SDB_HIT_BAD_TRAP:      Logc(ASNI_FG_RED,"hit bad trap"); break;
         case SDB_DIFFTEST_WRONG:    Logc(ASNI_FG_RED, "difftest detect wrong, sim quit"); break;
-        case SDB_END_TIME:          Logc(ASNI_FG_RED, "out of sim time"); break;
     }
     int fail = 1;
     if(sdb_state == SDB_HIT_GOOD_TRAP) fail = 0;

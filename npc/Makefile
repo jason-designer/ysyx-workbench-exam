@@ -63,10 +63,7 @@ sim:
 	-v $(VSRC_DIR)/DMemory.v                        \
 	-v $(VSRC_DIR)/IMemory.v                        \
 	-v $(VSRC_DIR)/Difftest.v                       \
-	-I $(CSRC_DIR)/halt.c                           \
-	-I $(CSRC_DIR)/memory.c                         \
-	-I $(CSRC_DIR)/reg.c                            \
-	-I $(CSRC_DIR)/difftest.c                       \
+	-I $(CSRC_DIR)/**.c                       		\
 	-LDFLAGS "-ldl"                                 \
 	-CFLAGS " -lasan "                              \
     --top-module SimTop                             \
@@ -86,6 +83,11 @@ wave:
 #更新am-test测试文件
 
 update_am_test:
+	mkdir -p bin/am-test
+	mkdir -p bin/am-test/hello
+	mkdir -p bin/am-test/rtc
+	mkdir -p bin/am-test/mario
+
 	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=h
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/hello/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/hello/
@@ -95,5 +97,10 @@ update_am_test:
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/rtc/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/rtc/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/rtc/
+
+	cd ../fceux-am && make ARCH=riscv64-npc mainargs=mario
+	cp ../fceux-am/build/fceux-riscv64-npc.bin bin/am-test/mario/
+	cp ../fceux-am/build/fceux-riscv64-npc.elf bin/am-test/mario/
+	cp ../fceux-am/build/fceux-riscv64-npc.txt bin/am-test/mario/
 
 include ../Makefile

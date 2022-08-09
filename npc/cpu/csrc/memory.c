@@ -1,6 +1,7 @@
 #include "memory.h"
+#include "device.h"
 #include <malloc.h>
-#include <sys/time.h>
+
 
 uint8_t* mem = (uint8_t*)malloc(MEM_SIZE);
 
@@ -61,14 +62,8 @@ uint64_t read_memory(uint64_t addr, int length){
     //     printf("-----%llx, %d\n",addr, length);
     //     printf("mem=%lx\n",*(uint32_t*)(mem + addr - RESET_VECTOR));
     // }
-    if(addr == 0xa0000048){
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
-        return us;
-    }
-
     if(addr == 0) return 0;
+    if(is_device_read(addr, length)) return mmio_read(addr, length);
     if(!(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE))) return 0;
     assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
     switch(length){
@@ -82,9 +77,8 @@ uint64_t read_memory(uint64_t addr, int length){
 
 void write_memory(uint64_t addr, uint64_t data, int length){
     //if(addr == 0) return;
-    if(addr==0xa00003f8){
-        char c = data;
-        printf("%c",c);
+    if(is_device_write(addr, length)) {
+        mmio_write(addr, data, length);
         return;
     }
     assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
