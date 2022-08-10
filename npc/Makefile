@@ -95,6 +95,7 @@ update_am_test:
 	mkdir -p bin/am-test/hello
 	mkdir -p bin/am-test/rtc
 	mkdir -p bin/am-test/keyboard
+	mkdir -p bin/am-test/video
 	mkdir -p bin/am-test/mario
 
 	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=h
@@ -111,6 +112,11 @@ update_am_test:
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/keyboard/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/keyboard/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/keyboard/
+
+	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=v
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/video/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/video/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/video/
 
 	cd ../fceux-am && make ARCH=riscv64-npc mainargs=mario
 	cp ../fceux-am/build/fceux-riscv64-npc.bin bin/am-test/mario/

@@ -5,8 +5,10 @@
 /************************ common macro ************************/
 #define concat_temp(x, y) x ## y
 #define concat(x, y) concat_temp(x, y)
-/************************ keyboard ************************/
-// key map
+/************************ timer device ************************/
+
+/************************ keyboard device ************************/
+// keyboard map
 #define KEYDOWN_MASK 0x8000
 #define MAP(c, f) c(f)
 #define _KEY_NAME(k) _KEY_##k,
@@ -34,7 +36,7 @@ static void init_keymap() {
 #define KEY_QUEUE_LEN 1024
 static int key_queue[KEY_QUEUE_LEN] = {};
 static int key_f = 0, key_r = 0;
-// 
+// keyboard mmio
 static uint32_t *i8042_data_port_base = NULL;
 
 void init_i8042() {
@@ -70,51 +72,148 @@ uint64_t i8042_read_data() {
   return i8042_data_port_base[0];
 }
 
+/************************ vga device ************************/
+#define SCREEN_W 400
+#define SCREEN_H 300
+// vmem and gpu_config port, gpu_status is always ready, so it is not needed
+static void *vmem = NULL;
+static uint32_t *vgactl_port_base = NULL;
+
+static uint32_t screen_width()  {return SCREEN_W;}
+static uint32_t screen_height() {return SCREEN_H;}
+static uint32_t screen_size()   {return screen_width() * screen_height() * sizeof(uint32_t);}
+
+static SDL_Renderer *renderer = NULL;
+static SDL_Texture *texture = NULL;
+
+static void init_screen() {
+  SDL_Window *window = NULL;
+  char title[128];
+  sprintf(title, "%s-NPC", "riscv64");
+  SDL_Init(SDL_INIT_VIDEO);
+  SDL_CreateWindowAndRenderer(SCREEN_W, SCREEN_H, 0, &window, &renderer);
+  SDL_SetWindowTitle(window, title);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STATIC, SCREEN_W, SCREEN_H);
+}
+
+static inline void update_screen() {
+  SDL_UpdateTexture(texture, NULL, vmem, SCREEN_W * sizeof(uint32_t));
+  SDL_RenderClear(renderer);
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
+}
+
+void vga_update_screen() {
+  if(vgactl_port_base[1]){
+		update_screen();
+		vgactl_port_base[1]=0;
+	}
+}
+
+void init_vga() {
+    vmem = malloc(screen_size());
+    vgactl_port_base = (uint32_t *)malloc(8);
+    vgactl_port_base[0] = (screen_width() << 16) | screen_height();
+    init_screen();
+    memset(vmem, 0, screen_size());
+}
+
+uint64_t mem_read_help(void* addr, int length){
+    switch(length){
+        case 1: return *(uint8_t*)addr;
+        case 2: return *(uint16_t*)addr;
+        case 4: return *(uint32_t*)addr;
+        case 8: return *(uint64_t*)addr;
+        default: assert(0);
+    }
+    return 0;
+}
+
+void mem_write_help(void* addr, uint64_t data, int length){
+    switch(length){
+        case 1: *(uint8_t*)addr = data; return;
+        case 2: *(uint16_t*)addr = data; return;
+        case 4: *(uint32_t*)addr = data; return;
+        case 8: *(uint64_t*)addr = data; return;
+        default: assert(0);
+    }
+}
+
+uint64_t vgactl_read_data(uint64_t addr, int length){
+    //assert(VGACTL_ADDR <= addr && (addr + length) < (VGACTL_ADDR + 8));
+    uint8_t* p = (uint8_t*)vgactl_port_base;
+    p = p + addr - VGACTL_ADDR;
+    return mem_read_help(p, length);
+}
+
+void vgactl_write_data(uint64_t addr, uint64_t data, int length){
+    //assert(VGACTL_ADDR <= addr && (addr + length) < (VGACTL_ADDR + 8));
+    uint8_t* p = (uint8_t*)vgactl_port_base;
+    p = p + addr - VGACTL_ADDR;
+    mem_write_help(p, data, length);
+}
+
+uint64_t fb_read_data(uint64_t addr, int length){
+    //assert(FB_ADDR <= addr && (addr + length) < (FB_ADDR + screen_size()));
+    uint8_t* p = (uint8_t*)vmem;
+    p = p + addr - FB_ADDR;
+    return mem_read_help(p, length);
+}
+
+void fb_write_data(uint64_t addr, uint64_t data, int length){
+    //assert(FB_ADDR <= addr && (addr + length) < (FB_ADDR + screen_size()));
+    uint8_t* p = (uint8_t*)vmem;
+    p = p + addr - FB_ADDR;
+    return mem_write_help(p, data, length);
+}
+
 /************************************************/
 bool is_device_read(uint64_t addr, int length){
+    return addr >= DEVICE_BASE;
+}
+bool is_device_write(uint64_t addr, int length){
     return addr >= DEVICE_BASE;
 }
 uint64_t mmio_read(uint64_t addr, int length){
     if(addr == SERIAL_PORT){        // uart
         return 0;
     }
-    if(addr == RTC_ADDR){           // uptime
+    if(RTC_ADDR <= addr && addr < KBD_ADDR){           // uptime
         struct timeval tv;
         gettimeofday(&tv, NULL);
         uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
-        return us;
+        if(addr == RTC_ADDR && length == 8) return us;
+        if(addr == RTC_ADDR && length == 4) return (uint32_t)us;
+        if(addr == (RTC_ADDR + 4) && length == 4) return us >> 32;
+        if(addr == (RTC_ADDR + 4) && length == 8) return us >> 32;
     }
     if(addr == KBD_ADDR){
         return i8042_read_data();
     }
+    if(VGACTL_ADDR <= addr && addr < AUDIO_ADDR)    {return vgactl_read_data(addr, length);}    // vgactl
+    if(FB_ADDR <= addr && addr < AUDIO_SBUF_ADDR)   {return fb_read_data(addr, length);}        // fb
     return 0; // TODO why it will read addr which is not device 
     assert(0);
 }
-bool is_device_write(uint64_t addr, int length){
-    return addr >= DEVICE_BASE;
-}
+
 void mmio_write(uint64_t addr, uint64_t data, int length){
     if(addr == SERIAL_PORT){        // uart
         char c = data;
         printf("%c",c);
         return;
     }
+    if(VGACTL_ADDR <= addr && addr < AUDIO_ADDR)    {vgactl_write_data(addr, data, length); return;}    // vgactl
+    if(FB_ADDR <= addr && addr < AUDIO_SBUF_ADDR)   {fb_write_data(addr, data, length); return;}        // fb
     assert(0);
 }
 /************************************************/
-void device_sdl_init(){
-    SDL_Window* window = NULL;
-    SDL_Renderer* renderer = NULL;
-    SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_CreateWindowAndRenderer(400,320,0,&window,&renderer);
-}
-
 void device_init(){
     init_i8042();
-    device_sdl_init();
+    init_vga();
 }
 
 void device_update(int *sdb_state){
+    // update keyboard
     SDL_Event event;
     while (SDL_PollEvent(&event)){
         switch (event.type) {
@@ -131,4 +230,6 @@ void device_update(int *sdb_state){
             default: break;
         }
     }
+    // update gpu
+    vga_update_screen();
 }
