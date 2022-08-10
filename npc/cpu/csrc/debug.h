@@ -34,7 +34,13 @@
     printf(__VA_ARGS__); \
   } while (0)
 
-
+#define Assert(cond, format, ...) \
+  do { \
+    if (!(cond)) { \
+      printf(ASNI_FMT(format, ASNI_FG_RED) "\n", ## __VA_ARGS__); \
+      assert(cond); \
+    } \
+  } while (0)
 
 
 #endif

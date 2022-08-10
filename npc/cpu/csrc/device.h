@@ -15,6 +15,9 @@
 #define FB_ADDR         (MMIO_BASE   + 0x1000000)
 #define AUDIO_SBUF_ADDR (MMIO_BASE   + 0x1200000)
 
+void device_init();
+void device_update(int* sdb_state);
+
 bool is_device_read(uint64_t addr, int length);
 uint64_t mmio_read(uint64_t addr, int length);
 bool is_device_write(uint64_t addr, int length);

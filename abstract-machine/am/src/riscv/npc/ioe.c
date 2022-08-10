@@ -2,14 +2,13 @@
 #include <klib-macros.h>
 
 void __am_timer_init();
-
 void __am_timer_rtc(AM_TIMER_RTC_T *);
 void __am_timer_uptime(AM_TIMER_UPTIME_T *);
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *);
-void __am_timer_rtc(AM_TIMER_RTC_T *);
 
 static void __am_timer_config(AM_TIMER_CONFIG_T *cfg) { cfg->present = true; cfg->has_rtc = true; }
 static void __am_input_config(AM_INPUT_CONFIG_T *cfg) { cfg->present = true;  }
+static void __am_uart_config(AM_UART_CONFIG_T *cfg)   { cfg->present = false; }
 
 typedef void (*handler_t)(void *buf);
 static void *lut[128] = {
@@ -18,6 +17,7 @@ static void *lut[128] = {
   [AM_TIMER_UPTIME] = __am_timer_uptime,
   [AM_INPUT_CONFIG] = __am_input_config,
   [AM_INPUT_KEYBRD] = __am_input_keybrd,
+  [AM_UART_CONFIG ] = __am_uart_config,
 };
 
 static void fail(void *buf) { panic("access nonexist register"); }
@@ -71,5 +71,12 @@ void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
   rtc->month  = 0;
   rtc->year   = 1900;
 }
+// keyboard
+#define KEYDOWN_MASK 0x8000
 
+void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {
+	uint32_t x = inl(KBD_ADDR);
+  kbd->keydown = x & 0x8000;
+	kbd->keycode = x & 0x7fff;
+}
 

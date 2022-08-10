@@ -36,7 +36,7 @@ clean:
 
 .PHONY: test verilog help compile bsp reformat checkformat clean
 
-
+# img_file
 ALL3_TEST_FILE = $(shell find $(NPC_HOME)/bin/non-output/riscv-tests/ -name "*-riscv-tests.bin")
 ALL4_TEST_FILE = $(shell find $(YSYX_DIR)/am-kernels/tests/cpu-tests/build/ -name "*-riscv64-npc.bin")
 ifdef ALL4
@@ -52,8 +52,16 @@ ifdef ALL
 IMG_FILE = $(NPC_HOME)/bin/$(ALL)
 endif
 
+# project source
+# VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v")
+# CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+# CSRCS +=
+
+LDFLAGS += -lSDL2 -lSDL2_image -ldl
+
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	echo $(VSRCS)
 	verilator -Wall --cc --exe --build --trace      \
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
@@ -64,8 +72,8 @@ sim:
 	-v $(VSRC_DIR)/IMemory.v                        \
 	-v $(VSRC_DIR)/Difftest.v                       \
 	-I $(CSRC_DIR)/**.c                       		\
-	-LDFLAGS "-ldl"                                 \
 	-CFLAGS " -lasan "                              \
+	$(addprefix -LDFLAGS , $(LDFLAGS)) 				\
     --top-module SimTop                             \
     --Mdir $(VERILATOR_DIR)                         \
     $(CSRC_DIR)/sim_main.cpp                        \
@@ -86,6 +94,7 @@ update_am_test:
 	mkdir -p bin/am-test
 	mkdir -p bin/am-test/hello
 	mkdir -p bin/am-test/rtc
+	mkdir -p bin/am-test/keyboard
 	mkdir -p bin/am-test/mario
 
 	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=h
@@ -97,6 +106,11 @@ update_am_test:
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/rtc/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/rtc/
 	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/rtc/
+
+	cd ../am-kernels/tests/am-tests/ && make ARCH=riscv64-npc mainargs=k
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.bin bin/am-test/keyboard/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.elf bin/am-test/keyboard/
+	cp ../am-kernels/tests/am-tests/build/amtest-riscv64-npc.txt bin/am-test/keyboard/
 
 	cd ../fceux-am && make ARCH=riscv64-npc mainargs=mario
 	cp ../fceux-am/build/fceux-riscv64-npc.bin bin/am-test/mario/

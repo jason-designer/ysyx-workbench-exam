@@ -6,14 +6,14 @@
 #include "halt.h"
 #include "reg.h"
 #include "difftest.h"
+#include "device.h"
 
-// config
-//#define DIFFTEST
-//#define TRACE
-
-enum { SDB_RUNNING, SDB_HIT_GOOD_TRAP, SDB_HIT_BAD_TRAP, SDB_DIFFTEST_WRONG};
-
+/***************** sdb config *******************/ 
+// #define DIFFTEST
+// #define TRACE
 #define SIM_RESET_TIME 2
+/************************************************/
+
 
 typedef struct {
   char* program_name;
@@ -47,43 +47,43 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     /****************************************************************************/
     setbuf(stdout, NULL);
     uint64_t size = load_program(img_file);
+    device_init();
 
     #ifdef DIFFTEST
     //init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
     #endif
-
+    // 
     int sdb_state = SDB_RUNNING;
     int sim_time = 0;                             // sim time
     int inst_number = 0;
-    //difftest 
+    // difftest 
     bool start_difftest = false;
     uint64_t pc = 0;
     uint64_t pre_pc = 0;
-    while (1) { 
+    // 
+    while (sdb_state = SDB_RUNNING) { 
+        // device
+        device_update(&sdb_state);
+        // clock and reset
         top->reset = sim_time < SIM_RESET_TIME ? 1 : 0;
-        top->clock = sim_time % 2;
-
-        //top->eval();
-        //if(sim_time % 2 == 1) pre_pc = pc;
-        //pc = top->io_imem_addr;
-        //if(sim_time % 2 == 1)top->io_imem_data = read_memory(pc, 4);                                                              
-        top->eval();          
+        top->clock = sim_time % 2;                                                          
+        top->eval();   
+        // trace
         #ifdef TRACE                      
         tfp->dump(contextp->time());
         #endif
-        //rtl debug
+        // SDL quit
+        if(sdb_state == SDB_QUIT) break;
+        // rtl debug
         if(sim_time >= SIM_RESET_TIME && sim_time % 2 == 0){
             // halt
-            // printf("halt=%u\n", cpu_halt);
             if((uint8_t)cpu_halt == 1) {
                 Log("Detected ebreak, sim quit");
                 if(!cpu_gpr[10]) sdb_state = SDB_HIT_GOOD_TRAP;
                 else sdb_state = SDB_HIT_BAD_TRAP;
                 break;
             }
-
-            
             // difftest
             #ifdef DIFFTEST
             if(start_difftest == false){  //这是为了跳过第一个valid
@@ -106,8 +106,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 }
             }
             #endif
-        }
-        
+        } 
         contextp->timeInc(1);
         sim_time++;
     }
@@ -115,6 +114,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         case SDB_HIT_GOOD_TRAP:     Logc(ASNI_FG_GREEN,"hit good trap"); break;
         case SDB_HIT_BAD_TRAP:      Logc(ASNI_FG_RED,"hit bad trap"); break;
         case SDB_DIFFTEST_WRONG:    Logc(ASNI_FG_RED, "difftest detect wrong, sim quit"); break;
+        case SDB_QUIT:              Logc(ASNI_FG_RED, "sim quit by SDL singal"); break;
     }
     int fail = 1;
     if(sdb_state == SDB_HIT_GOOD_TRAP) fail = 0;
