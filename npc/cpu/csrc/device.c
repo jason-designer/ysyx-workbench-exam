@@ -6,7 +6,11 @@
 #define concat_temp(x, y) x ## y
 #define concat(x, y) concat_temp(x, y)
 /************************ timer device ************************/
+static void* rtc_port_base = NULL;
 
+void init_timer(){
+    rtc_port_base = malloc(8);
+}
 /************************ keyboard device ************************/
 // keyboard map
 #define KEYDOWN_MASK 0x8000
@@ -118,96 +122,9 @@ void init_vga() {
     memset(vmem, 0, screen_size());
 }
 
-uint64_t mem_read_help(void* addr, int length){
-    switch(length){
-        case 1: return *(uint8_t*)addr;
-        case 2: return *(uint16_t*)addr;
-        case 4: return *(uint32_t*)addr;
-        case 8: return *(uint64_t*)addr;
-        default: assert(0);
-    }
-    return 0;
-}
-
-void mem_write_help(void* addr, uint64_t data, int length){
-    switch(length){
-        case 1: *(uint8_t*)addr = data; return;
-        case 2: *(uint16_t*)addr = data; return;
-        case 4: *(uint32_t*)addr = data; return;
-        case 8: *(uint64_t*)addr = data; return;
-        default: assert(0);
-    }
-}
-
-uint64_t vgactl_read_data(uint64_t addr, int length){
-    //assert(VGACTL_ADDR <= addr && (addr + length) < (VGACTL_ADDR + 8));
-    uint8_t* p = (uint8_t*)vgactl_port_base;
-    p = p + addr - VGACTL_ADDR;
-    return mem_read_help(p, length);
-}
-
-void vgactl_write_data(uint64_t addr, uint64_t data, int length){
-    //assert(VGACTL_ADDR <= addr && (addr + length) < (VGACTL_ADDR + 8));
-    uint8_t* p = (uint8_t*)vgactl_port_base;
-    p = p + addr - VGACTL_ADDR;
-    mem_write_help(p, data, length);
-}
-
-uint64_t fb_read_data(uint64_t addr, int length){
-    //assert(FB_ADDR <= addr && (addr + length) < (FB_ADDR + screen_size()));
-    uint8_t* p = (uint8_t*)vmem;
-    p = p + addr - FB_ADDR;
-    return mem_read_help(p, length);
-}
-
-void fb_write_data(uint64_t addr, uint64_t data, int length){
-    //assert(FB_ADDR <= addr && (addr + length) < (FB_ADDR + screen_size()));
-    uint8_t* p = (uint8_t*)vmem;
-    p = p + addr - FB_ADDR;
-    return mem_write_help(p, data, length);
-}
-
-/************************************************/
-bool is_device_read(uint64_t addr, int length){
-    return addr >= DEVICE_BASE;
-}
-bool is_device_write(uint64_t addr, int length){
-    return addr >= DEVICE_BASE;
-}
-uint64_t mmio_read(uint64_t addr, int length){
-    if(addr == SERIAL_PORT){        // uart
-        return 0;
-    }
-    if(RTC_ADDR <= addr && addr < KBD_ADDR){           // uptime
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
-        if(addr == RTC_ADDR && length == 8) return us;
-        if(addr == RTC_ADDR && length == 4) return (uint32_t)us;
-        if(addr == (RTC_ADDR + 4) && length == 4) return us >> 32;
-        if(addr == (RTC_ADDR + 4) && length == 8) return us >> 32;
-    }
-    if(addr == KBD_ADDR){
-        return i8042_read_data();
-    }
-    if(VGACTL_ADDR <= addr && addr < AUDIO_ADDR)    {return vgactl_read_data(addr, length);}    // vgactl
-    if(FB_ADDR <= addr && addr < AUDIO_SBUF_ADDR)   {return fb_read_data(addr, length);}        // fb
-    return 0; // TODO why it will read addr which is not device 
-    assert(0);
-}
-
-void mmio_write(uint64_t addr, uint64_t data, int length){
-    if(addr == SERIAL_PORT){        // uart
-        char c = data;
-        printf("%c",c);
-        return;
-    }
-    if(VGACTL_ADDR <= addr && addr < AUDIO_ADDR)    {vgactl_write_data(addr, data, length); return;}    // vgactl
-    if(FB_ADDR <= addr && addr < AUDIO_SBUF_ADDR)   {fb_write_data(addr, data, length); return;}        // fb
-    assert(0);
-}
 /************************************************/
 void device_init(){
+    init_timer();
     init_i8042();
     init_vga();
 }
@@ -232,4 +149,94 @@ void device_update(int *sdb_state){
     }
     // update gpu
     vga_update_screen();
+}
+
+/************************************************/
+/*          len     write   read
+uart        1       1       0
+timer       8       0       1
+keyboard    4       0       1
+vgactl      8       1       1
+fb                  1       0       */
+
+uint64_t mem_read_help(void* addr, int length){
+    switch(length){
+        case 1: return *(uint8_t*)addr;
+        case 2: return *(uint16_t*)addr;
+        case 4: return *(uint32_t*)addr;
+        case 8: return *(uint64_t*)addr;
+        default: assert(0);
+    }
+    return 0;
+}
+
+void mem_write_help(void* addr, uint64_t data, int length){
+    switch(length){
+        case 1: *(uint8_t*)addr = data; return;
+        case 2: *(uint16_t*)addr = data; return;
+        case 4: *(uint32_t*)addr = data; return;
+        case 8: *(uint64_t*)addr = data; return;
+        default: assert(0);
+    }
+}
+
+void mmio_read_device(long long raddr, long long *rdata){
+    uint64_t addr = raddr & 0xfffffffffffffff8;
+    switch(addr){
+        case RTC_ADDR:      {
+                            struct timeval tv;
+                            gettimeofday(&tv, NULL);
+                            uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
+                            *rdata = us;
+                            break;
+                            }
+        case KBD_ADDR:      *rdata = key_dequeue();
+                            break;
+        case VGACTL_ADDR:   *rdata = *(uint64_t*)vgactl_port_base;
+                            break;
+        default:            break;
+    }
+    //Assert(0, "raddr = %llx", raddr);
+}
+
+void mmio_write_device(long long waddr, long long wdata, char wmask){
+    uint64_t addr, data;
+    int length;
+    addr = waddr & 0xfffffffffffffff8;
+    data = wdata;
+    switch((uint8_t)wmask){
+        case 0x01: length = 1; addr += 0; data = (data & 0x00000000000000ff) >> 0;  break;
+        case 0x02: length = 1; addr += 1; data = (data & 0x000000000000ff00) >> 8;  break;
+        case 0x04: length = 1; addr += 2; data = (data & 0x0000000000ff0000) >> 16; break;
+        case 0x08: length = 1; addr += 3; data = (data & 0x00000000ff000000) >> 24; break;
+        case 0x10: length = 1; addr += 4; data = (data & 0x000000ff00000000) >> 32; break;
+        case 0x20: length = 1; addr += 5; data = (data & 0x0000ff0000000000) >> 40; break;
+        case 0x40: length = 1; addr += 6; data = (data & 0x00ff000000000000) >> 48; break;
+        case 0x80: length = 1; addr += 7; data = (data & 0xff00000000000000) >> 56; break;
+        case 0x03: length = 2; addr += 0; data = (data & 0x000000000000ffff) >> 0;  break;
+        case 0x0c: length = 2; addr += 2; data = (data & 0x00000000ffff0000) >> 16; break;
+        case 0x30: length = 2; addr += 4; data = (data & 0x0000ffff00000000) >> 32; break;
+        case 0xc0: length = 2; addr += 6; data = (data & 0xffff000000000000) >> 48; break;
+        case 0x0f: length = 4; addr += 0; data = (data & 0x00000000ffffffff) >> 0;  break;
+        case 0xf0: length = 4; addr += 4; data = (data & 0xffffffff00000000) >> 32; break;
+        case 0xff: length = 8; addr += 0; data = data;                              break;
+        default: assert(0);
+    }
+    if(addr == SERIAL_PORT && length == 1){
+        printf("%c", (uint8_t)wdata);
+        return;
+    }
+    if(VGACTL_ADDR <= addr && (addr + length) <= (VGACTL_ADDR + 8)){
+        uint8_t* p = (uint8_t*)vgactl_port_base;
+        p = p + addr - VGACTL_ADDR;
+        mem_write_help(p, data, length);
+        return;
+    }
+    if(FB_ADDR <= addr && ((addr + length) <= (FB_ADDR + 300*400*4))){
+        uint8_t* p = (uint8_t*)vmem;
+        p = p + addr - FB_ADDR;
+        mem_write_help(p, data, length);
+        return;
+    }
+    //Assert(0,"waddr=%llx wdata=%lld wmask=%d", waddr, wdata, wmask);
 }

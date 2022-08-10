@@ -23,5 +23,7 @@ uint64_t mmio_read(uint64_t addr, int length);
 bool is_device_write(uint64_t addr, int length);
 void mmio_write(uint64_t addr, uint64_t data, int length);
 
+void mmio_read_device(long long raddr, long long *rdata);
+void mmio_write_device(long long waddr, long long wdata, char wmask);
 
 #endif

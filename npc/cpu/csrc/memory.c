@@ -58,12 +58,7 @@ uint64_t load_program(char* img_file){
 }
 
 uint64_t read_memory(uint64_t addr, int length){
-    // if(addr != 0){
-    //     printf("-----%llx, %d\n",addr, length);
-    //     printf("mem=%lx\n",*(uint32_t*)(mem + addr - RESET_VECTOR));
-    // }
     if(addr == 0) return 0;
-    if(is_device_read(addr, length)) return mmio_read(addr, length);
     if(!(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE))) return 0;
     assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
     switch(length){
@@ -76,11 +71,6 @@ uint64_t read_memory(uint64_t addr, int length){
 }
 
 void write_memory(uint64_t addr, uint64_t data, int length){
-    //if(addr == 0) return;
-    if(is_device_write(addr, length)) {
-        mmio_write(addr, data, length);
-        return;
-    }
     assert(addr >= RESET_VECTOR && addr < (RESET_VECTOR + MEM_SIZE));
     switch(length){
         case 1: *(uint8_t*)(mem + addr - RESET_VECTOR) = (uint8_t)data; break;
@@ -110,7 +100,14 @@ void imem_read(unsigned char ren, long long raddr, int *rdata) {
 void pmem_read(unsigned char ren, long long raddr, long long *rdata) {
     // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
     //Logc(ASNI_FG_YELLOW,"dmem read mem, raddr = %llx, ren = %d",raddr, ren);
-    if(ren) *rdata = read_memory(raddr & 0xfffffffffffffff8, 8);
+    if(ren) {
+        if(raddr >= DEVICE_BASE){
+            mmio_read_device(raddr, rdata);
+            return;
+        }
+
+        *rdata = read_memory(raddr & 0xfffffffffffffff8, 8);
+    }
 }
 void pmem_write(unsigned char wen, long long waddr, long long wdata, char wmask) {
     // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
@@ -118,6 +115,11 @@ void pmem_write(unsigned char wen, long long waddr, long long wdata, char wmask)
     // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
     //Logc(ASNI_FG_YELLOW,"dmem write mem, wen = %d, waddr = %llx, wdata = %llx, wmask = %x", wen, waddr, wdata, wmask);
     if(wen){
+        if(waddr >= DEVICE_BASE){
+            mmio_write_device(waddr, wdata, wmask);
+            return;
+        }
+
         uint64_t x = read_memory(waddr & 0xfffffffffffffff8, 8);
         uint64_t mask = wmask_to_64bit(wmask);
         x = x & (~mask);
