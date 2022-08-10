@@ -106,7 +106,7 @@ void device_sdl_init(){
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_CreateWindowAndRenderer(1280,720,0,&window,&renderer);
+    SDL_CreateWindowAndRenderer(400,320,0,&window,&renderer);
 }
 
 void device_init(){

@@ -62,7 +62,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     uint64_t pc = 0;
     uint64_t pre_pc = 0;
     // 
-    while (sdb_state = SDB_RUNNING) { 
+    while (sdb_state == SDB_RUNNING) { 
         // device
         device_update(&sdb_state);
         // clock and reset
