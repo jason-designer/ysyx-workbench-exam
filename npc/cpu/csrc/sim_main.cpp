@@ -7,6 +7,7 @@
 #include "reg.h"
 #include "difftest.h"
 #include "device.h"
+#include <sys/time.h>
 
 /***************** sdb config *******************/ 
 // #define DIFFTEST
@@ -14,6 +15,12 @@
 #define SIM_RESET_TIME 2
 /************************************************/
 
+uint64_t get_sys_time_us(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
+    return us;
+}
 
 typedef struct {
   char* program_name;
@@ -21,7 +28,10 @@ typedef struct {
   uint64_t sim_time;
   uint64_t clock_number;
   uint64_t inst_number;
+  uint64_t start_sys_time;
+  uint64_t end_sys_time;
   double ipc;
+  uint64_t clock_per_sec;
 } Sdb_end_info;
 
 char* get_program_name(char* img_file){
@@ -52,8 +62,12 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     #ifdef DIFFTEST
     //init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
+    #else
+    cpu_difftest_valid = 0;
     #endif
+
     // 
+    uint64_t start_sys_time = get_sys_time_us();
     int sdb_state = SDB_RUNNING;
     int sim_time = 0;                             // sim time
     int inst_number = 0;
@@ -105,6 +119,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 }
                 }
             }
+            #else
+            if(cpu_difftest_valid){
+                inst_number++;  //记录commit的指令数
+            }
             #endif
         } 
         contextp->timeInc(1);
@@ -131,7 +149,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     res->sim_time = sim_time;
     res->clock_number = (sim_time - SIM_RESET_TIME) / 2;
     res->inst_number = inst_number;
+    res->end_sys_time = get_sys_time_us();
+    res->start_sys_time = start_sys_time;
     res->ipc = (double)res->inst_number / (double)res->clock_number;
+    res->clock_per_sec = (double)res->clock_number / ((double)(res->end_sys_time - res->start_sys_time) / (double)1000000);
     return res;
 }
 
@@ -158,13 +179,13 @@ int main(int argc, char** argv, char** env) {
     printf("------------------------simulation report------------------------\n");
     for(int i = 0; i < program_num; i++){
         info = program_end_info[i];
-        printf("%-30s: simtime=%6ld  ipc=%f ", info->program_name, info->sim_time, info->ipc);
+        printf("%-30s: simtime=%6ld  ipc=%f clk/s=%ld  ", info->program_name, info->sim_time, info->ipc, info->clock_per_sec);
         if(info->fail) Logc(ASNI_FG_RED, "FAIL");
         else Logc(ASNI_FG_GREEN, "PASS");
         total_clock += info->clock_number;
         total_inst  += info->inst_number;
     }
     double ipc = (double)total_inst / (double)total_clock;
-    printf("total program number:%d, fail:%d, IPC=%f \n", program_num, fail_num, ipc);
+    printf("total program number:%d, fail:%d, IPC=%f\n", program_num, fail_num, ipc);
     printf("-----------------------------------------------------------------\n");
 }
