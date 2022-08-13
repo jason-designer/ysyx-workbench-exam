@@ -66,7 +66,7 @@ sim:
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
 	-Wno-LATCH                                      \
-	-v $(VSRC_DIR)/RegFile.v                        \
+	-v $(VSRC_DIR)/RegFileBlackBox.v               	\
 	-v $(VSRC_DIR)/Halt.v                           \
 	-v $(VSRC_DIR)/DMemory.v                        \
 	-v $(VSRC_DIR)/IMemory.v                        \

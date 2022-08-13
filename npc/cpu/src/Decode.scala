@@ -2,15 +2,25 @@ import chisel3._
 import chisel3.util._
 import Instructions._
 
-
-
+object Decode_constant{
+    val fu_code_length      = 7
+    val alu_code_length     = 16
+    val bu_code_length      = 8
+    val lu_code_length      = 7
+    val su_code_length      = 4
+    val mu_code_length      = 2
+    val du_code_length      = 8
+    val csru_code_length    = 8
+}
 class DecodeInfo extends Bundle{
-    val fu_code  = Output(UInt())
-    val alu_code = Output(UInt())
-    val bu_code  = Output(UInt())
-    val lu_code  = Output(UInt())
-    val su_code  = Output(UInt())
-    val mdu_code = Output(UInt())
+    val fu_code     = Output(UInt())
+    val alu_code    = Output(UInt())
+    val bu_code     = Output(UInt())
+    val lu_code     = Output(UInt())
+    val su_code     = Output(UInt())
+    val mu_code     = Output(UInt())
+    val du_code     = Output(UInt())
+    val csru_code   = Output(UInt())
 }
 class Decode extends Module{
     val io = IO(new Bundle{
@@ -34,6 +44,12 @@ class Decode extends Module{
         val op1 = Output(UInt(64.W))
         val op2 = Output(UInt(64.W))
         val imm = Output(UInt(64.W))
+        val putch = Output(Bool())
+
+        val mtvec = Input(UInt(64.W))
+        val mepc  = Input(UInt(64.W))
+
+        val intr = Input(Bool())
     })
     val inst = io.inst
 
@@ -106,6 +122,19 @@ class Decode extends Module{
     val remw    = inst === REMW
     val remu    = inst === REMU
     val remuw   = inst === REMUW
+    // csr
+    val ecall   = inst === ECALL
+    val mret    = inst === MRET
+    val csrrs   = inst === CSRRS
+    val csrrw   = inst === CSRRW
+    val csrrc   = inst === CSRRC
+    val csrrsi  = inst === CSRRSI
+    val csrrwi  = inst === CSRRWI
+    val csrrci  = inst === CSRRCI
+
+    // printf
+    val putch   = inst === PUTCH
+    io.putch := putch
 
     //---------------------------------------get fu_code
     //alu
@@ -140,30 +169,37 @@ class Decode extends Module{
     //su
     val su_code = Cat(sd, sw, sh, sb)
     val su_en   = su_code =/= 0.U
-    //mdu
-    val mdu_code = Cat(remuw, remu, remw, rem, divuw, divu, divw, div, mulw, mul)
-    val mdu_en   = mdu_code =/= 0.U
+    //mu
+    val mu_code = Cat(mulw, mul)
+    val mu_en   = mu_code =/= 0.U
+    //du
+    val du_code = Cat(remuw, remu, remw, rem, divuw, divu, divw, div)
+    val du_en   = du_code =/= 0.U
+    //csrrs
+    val csru_code = Cat(csrrci, csrrwi, csrrsi, csrrc, csrrw, csrrs, mret, ecall)
+    val csr_en    = csru_code =/= 0.U
     //fu_code
-    val fu_code = Cat(mdu_en, su_en, lu_en, bu_en, alu_en)
-    
+    val fu_code = Cat(csr_en, du_en, mu_en, su_en, lu_en, bu_en, alu_en)
   
     //----------------------------------------get inst type
-    val type_r =    sll  || srl   || sra  || sllw  || srlw  || sraw  ||
-                    add  || addw  || sub  || subw  ||
-                    xor  || or    || and  ||
-                    slt  || sltu  ||
-                    mul  || mulw  ||
-                    div  || divw  || divu || divuw ||
-                    rem  || remw  || remu || remuw 
-    val type_i =    slli || srli  || srai || slliw || srliw || sraiw ||
-                    addi || addiw ||
-                    xori || ori   || andi ||
-                    slti || sltiu ||
-                    jalr ||
-                    lb   || lh    || lw   || ld    || lbu   || lhu   || lwu 
-    val type_s =    sb   || sh    || sw   || sd
-    val type_b =    beq  || bne   || blt  || bge   || bltu  || bgeu
-    val type_u =    lui  || auipc 
+    val type_r =    sll   || srl   || sra   || sllw  || srlw   || sraw   ||
+                    add   || addw  || sub   || subw  ||
+                    xor   || or    || and   ||
+                    slt   || sltu  ||
+                    mul   || mulw  ||
+                    div   || divw  || divu  || divuw ||
+                    rem   || remw  || remu  || remuw ||
+                    mret
+    val type_i =    slli  || srli  || srai  || slliw || srliw  || sraiw  ||
+                    addi  || addiw ||
+                    xori  || ori   || andi  ||
+                    slti  || sltiu ||
+                    jalr  ||
+                    lb    || lh    || lw    || ld    || lbu    || lhu    || lwu ||
+                    ecall || csrrs || csrrw || csrrc || csrrwi || csrrci || csrrsi
+    val type_s =    sb    || sh    || sw    || sd
+    val type_b =    beq   || bne   || blt   || bge   || bltu   || bgeu
+    val type_u =    lui   || auipc 
     val type_j =    jal
     val inst_type = Cat(type_r, type_i, type_s, type_b, type_u, type_j)
 
@@ -184,12 +220,14 @@ class Decode extends Module{
     ))
 
     //
-    io.decode_info.fu_code  := fu_code
-    io.decode_info.alu_code := alu_code
-    io.decode_info.bu_code  := bu_code
-    io.decode_info.lu_code  := lu_code
-    io.decode_info.su_code  := su_code
-    io.decode_info.mdu_code  := mdu_code
+    io.decode_info.fu_code   := fu_code
+    io.decode_info.alu_code  := alu_code
+    io.decode_info.bu_code   := bu_code
+    io.decode_info.lu_code   := lu_code
+    io.decode_info.su_code   := su_code
+    io.decode_info.mu_code   := mu_code
+    io.decode_info.du_code   := du_code
+    io.decode_info.csru_code := csru_code
 
     io.rs1_addr := inst(19, 15)
     io.rs2_addr := inst(24, 20)
@@ -208,7 +246,7 @@ class Decode extends Module{
     val op2 = io.op2
     val pc  = io.pc
     val bu_jump_pc = Mux(bu_code === "b10000000".U, ((op1 + op2) & "hfffffffffffffffe".U), pc + imm)
-    val bu_jump_en = MuxLookup(bu_code, 0.U, Array(
+    val bu_jump_en = MuxLookup(bu_code, false.B, Array(
         "b00000001".U -> (op1 === op2),                     //beq
         "b00000010".U -> (op1 =/= op2),                     //bne
         "b00000100".U -> (op1.asSInt()  <  op2.asSInt()),   //blt
@@ -218,8 +256,34 @@ class Decode extends Module{
         "b01000000".U -> true.B,                            //jal
         "b10000000".U -> true.B,                            //jalr
     ))
-    io.jump_en := bu_jump_en
-    io.jump_pc := bu_jump_pc
+
+    val csru_jump_pc = MuxLookup(csru_code, 0.U, Array(
+        "b0001".U -> io.mtvec,    //ecall
+        "b0010".U -> io.mepc,     //mret
+    ))
+    val csru_jump_en = MuxLookup(csru_code, false.B, Array(
+        "b0001".U -> true.B,   //ecall
+        "b0010".U -> true.B,   //mret
+    ))
+
+    // io.jump_en := bu_jump_en || csru_jump_en                // 按理说不会两个都enable
+    // io.jump_pc := Mux(bu_jump_en, bu_jump_pc, csru_jump_pc) // 按理说不会两个都enable
+    when(io.intr){                  // intr有可能和bu或csru同时enable，所以intr要优先
+        io.jump_en := true.B
+        io.jump_pc := io.mtvec
+    }
+    .elsewhen(bu_jump_en){          // 按理bu和csru不会两个都enable,所以顺序无关
+        io.jump_en := true.B
+        io.jump_pc := bu_jump_pc
+    }
+    .elsewhen(csru_jump_en){
+        io.jump_en := true.B
+        io.jump_pc := csru_jump_pc
+    }
+    .otherwise{
+        io.jump_en := false.B
+        io.jump_pc := 0.U
+    }
 }
 
 

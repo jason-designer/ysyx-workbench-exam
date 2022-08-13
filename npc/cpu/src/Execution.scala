@@ -1,30 +1,42 @@
 import chisel3._
 import chisel3.util._
+import Decode_constant._
 
 class Execution extends Module{
     val io = IO(new Bundle{
-        val decode_info = Flipped(new DecodeInfo)
+        val fu_code     = Input(UInt(fu_code_length.W))
+        val alu_code    = Input(UInt(alu_code_length.W))
+        val bu_code     = Input(UInt(bu_code_length.W))
+        val lu_code     = Input(UInt(lu_code_length.W))
+        val su_code     = Input(UInt(su_code_length.W))
+        val csru_code   = Input(UInt(csru_code_length.W))
 
         val op1 = Input(UInt(64.W))
         val op2 = Input(UInt(64.W))
         val pc  = Input(UInt(64.W))
         val imm = Input(UInt(64.W))
 
-        val alu_out = Output(UInt(64.W))
-        val bu_out  = Output(UInt(64.W))
-        val mdu_out = Output(UInt(64.W))
-        
+        val alu_out     = Output(UInt(64.W))
+        val bu_out      = Output(UInt(64.W))
+        val csru_out    = Output(UInt(64.W))
+
+        val rs1_addr    = Input(UInt(5.W))
+        val csr_raddr   = Output(UInt(12.W))
+        val csr_rdata   = Input(UInt(64.W))
+        val csr_wen     = Output(Bool())
+        val csr_waddr   = Output(UInt(12.W))
+        val csr_wdata   = Output(UInt(64.W))
     })
     val op1 = io.op1
     val op2 = io.op2
     val pc  = io.pc
     val imm = io.imm
-    val fu_code  = io.decode_info.fu_code
-    val alu_code = io.decode_info.alu_code
-    val bu_code  = io.decode_info.bu_code
-    val lu_code  = io.decode_info.lu_code
-    val su_code  = io.decode_info.su_code
-    val mdu_code = io.decode_info.mdu_code
+    val fu_code     = io.fu_code
+    val alu_code    = io.alu_code
+    val bu_code     = io.bu_code
+    val lu_code     = io.lu_code
+    val su_code     = io.su_code
+    val csru_code   = io.csru_code
 
     //
     def sext(v:UInt, len:Int):UInt = len match{
@@ -61,26 +73,50 @@ class Execution extends Module{
     //bu
     val bu_out = Mux(bu_code === "b10000000".U || bu_code === "b01000000".U, pc + 4.U, 0.U)
 
-    //mdu
-    val mdu_out = MuxLookup(mdu_code, 0.U, Array(
-        "b0000000001".U -> (op1 * op2),                                             //mul
-        "b0000000010".U -> sext((op1 * op2), 4),                                    //mulw
-        "b0000000100".U -> (op1.asSInt() / op2.asSInt()).asUInt(),                  //div
-        "b0000001000".U -> (op1(31, 0).asSInt() / op2(31, 0).asSInt()).asUInt(),    //divw
-        "b0000010000".U -> (op1 / op2),                 //divu
-        "b0000100000".U -> (op1(31, 0) / op2(31, 0)),   //divuw
-        "b0001000000".U -> (op1.asSInt() % op2.asSInt()).asUInt(),  //rem
-        "b0010000000".U -> (op1(31, 0).asSInt() % op2(31, 0).asSInt()).asUInt(),  //remw
-        "b0100000000".U -> (op1 % op2),  //remu
-        "b1000000000".U -> (op1(31, 0) % op2(31, 0)),  //remuw
+    //csru
+    io.csr_raddr := op2
+    val csru_out = MuxLookup(csru_code, 0.U, Array(
+        "b00000100".U -> io.csr_rdata,
+        "b00001000".U -> io.csr_rdata,
+        "b00010000".U -> io.csr_rdata,
+        "b00100000".U -> io.csr_rdata,
+        "b01000000".U -> io.csr_rdata,
+        "b10000000".U -> io.csr_rdata,
+    ))
+    val csr_wen = MuxLookup(csru_code, false.B, Array(
+        "b00000100".U -> true.B,
+        "b00001000".U -> true.B,
+        "b00010000".U -> true.B,
+        "b00100000".U -> true.B,
+        "b01000000".U -> true.B,
+        "b10000000".U -> true.B,
+    ))
+    val csr_waddr = MuxLookup(csru_code, 0.U, Array(
+        "b00000100".U -> op2,
+        "b00001000".U -> op2,
+        "b00010000".U -> op2,
+        "b00100000".U -> op2,
+        "b01000000".U -> op2,
+        "b10000000".U -> op2,
+    ))
+    val csr_wdata = MuxLookup(csru_code, 0.U, Array(
+        "b00000100".U -> (io.csr_rdata | op1),
+        "b00001000".U -> op1,
+        "b00010000".U -> (io.csr_rdata & (~op1)),
+        "b00100000".U -> (io.csr_rdata | (Cat(0.U(59.W), io.rs1_addr))),
+        "b01000000".U -> Cat(0.U(59.W), io.rs1_addr),
+        "b10000000".U -> (io.csr_rdata & (~Cat(0.U(59.W), io.rs1_addr))),
     ))
 
+    // out
+    io.alu_out  := alu_out
+    io.bu_out   := bu_out
+    io.csru_out := csru_out
 
-    //
-    io.alu_out := alu_out
-    io.bu_out  := bu_out
-    io.mdu_out := mdu_out
-
+    // csr io
+    io.csr_wen      := csr_wen
+    io.csr_waddr    := csr_waddr
+    io.csr_wdata    := csr_wdata
 }
 
 

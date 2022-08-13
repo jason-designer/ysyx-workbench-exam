@@ -10,8 +10,8 @@
 #include <sys/time.h>
 
 /***************** sdb config *******************/ 
-// #define DIFFTEST
-// #define TRACE
+#define DIFFTEST
+#define TRACE
 #define SIM_RESET_TIME 2
 /************************************************/
 
