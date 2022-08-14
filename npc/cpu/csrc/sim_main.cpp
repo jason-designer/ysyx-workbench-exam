@@ -11,9 +11,9 @@
 #include <sys/time.h>
 
 /***************** sdb config *******************/ 
-// #define DIFFTEST
-#define TRACE_WAVE
-#define ITRACE
+#define DIFFTEST
+// #define TRACE_WAVE
+// #define ITRACE
 // #define MTRACE 
 #define SIM_RESET_TIME 2
 /************************************************/
@@ -74,7 +74,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     //init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
     #else
-    cpu_difftest_valid = 0;
+    difftest_info.valid = 0;
     #endif
 
     // 
@@ -133,26 +133,34 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
             // difftest
             #ifdef DIFFTEST
             if(start_difftest == false){  //这是为了跳过第一个valid
-                if(cpu_difftest_valid) {
+                if(difftest_info.valid) {
                     start_difftest = true;
                     pre_pc = pc;
                     pc = cpu_pc;
                 }
             }
             else{
-                if(cpu_difftest_valid){
+                if(difftest_info.valid){
                     inst_number++;  //记录commit的指令数
                     pre_pc = pc;
                     pc = cpu_pc;
                     isa_reg_update(pc, cpu_gpr);
-                    if(!difftest_step(pre_pc)) {
-                    sdb_state = SDB_DIFFTEST_WRONG;
-                    break;
+
+                    bool read_device = difftest_info.ren == 1 && difftest_info.raddr >= DEVICE_BASE;
+                    bool write_device = difftest_info.wen == 1 && difftest_info.waddr >= DEVICE_BASE;
+                    if(read_device || write_device){            // is device, skip difftest
+                        difftest_skip_ref();
+                    }
+                    else{                                       // difftest
+                        if(!difftest_step(pre_pc)) {
+                            sdb_state = SDB_DIFFTEST_WRONG;
+                        break;
+                    }
                 }
                 }
             }
             #else
-            if(cpu_difftest_valid){
+            if(difftest_info.valid){
                 inst_number++;  //记录commit的指令数
             }
             #endif
@@ -171,9 +179,9 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     if(sdb_state == SDB_HIT_GOOD_TRAP) fail = 0;
 
     /***********************************************************************/
-
+    #ifdef ITRACE
     iringbuf_print();
-
+    #endif
     /***********************************************************************/
     tfp->close();
     delete top;

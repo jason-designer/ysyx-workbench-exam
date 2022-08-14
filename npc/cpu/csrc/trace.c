@@ -45,8 +45,10 @@ void iringbuf_log_once(char* str){
 
 void iringbuf_print(){
     int i;
+    printf("-------------------------  iringbuf ---------------------------\n");
     for(i = 0; i < IRINGBUF_SIZE; i++){
         if(i == iringbuf_index) printf("-->[%2d]%s\n", i, iringbuf[i]);
         else printf("   [%2d]%s\n", i, iringbuf[i]);
     }
+    printf("---------------------------------------------------------------\n");
 }

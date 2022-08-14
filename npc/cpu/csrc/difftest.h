@@ -11,8 +11,20 @@ typedef riscv64_CPU_state CPU_state;
 
 extern CPU_state cpu;
 
-extern uint64_t cpu_difftest_valid;
-extern "C" void read_difftest_valid(unsigned char valid);
+typedef struct {
+  bool valid;
+  uint64_t pc;
+  uint32_t inst;
+  bool ren;
+  uint64_t raddr;
+  uint64_t rdata;
+  bool wen;
+  uint64_t waddr;
+  uint64_t wdata;
+  uint8_t  wmask;
+} Difftest_Info;
+extern Difftest_Info difftest_info;
+extern "C" void difftest_info_fetch(unsigned char valid, unsigned char ren, long long raddr, unsigned char wen, long long waddr);
 
 #define DIFFTEST_PORT 1234
 enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };

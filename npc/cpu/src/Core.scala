@@ -110,8 +110,12 @@ class Core extends Module{
     halt.io.halt  := inst === EBREAK || inst === "h0000006b".U 
     // difftest
     val difftest = Module(new Difftest)
-    difftest.io.valid := commit
-    difftest.io.pc    := pc
+    difftest.io.valid   := commit
+    difftest.io.pc      := pc
+    difftest.io.ren     := pipeline.io.commit_dmem_ren
+    difftest.io.raddr   := pipeline.io.commit_dmem_raddr
+    difftest.io.wen     := pipeline.io.commit_dmem_wen
+    difftest.io.waddr   := pipeline.io.commit_dmem_waddr
     // itrace
     val itrace = Module(new ITrace)
     itrace.io.clk       := clock

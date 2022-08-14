@@ -91,6 +91,11 @@ class Pipeline extends Module{
         // info
         val mem_pc      = Output(UInt(64.W))
         val mem_inst    = Output(UInt(32.W))
+
+        val commit_dmem_ren     = Output(Bool())        // use to skip difftest
+        val commit_dmem_raddr   = Output(UInt(64.W))
+        val commit_dmem_wen     = Output(Bool())
+        val commit_dmem_waddr   = Output(UInt(64.W))
     })
     val ifu     = Module(new IFetch)
     val idu     = Module(new Decode)
@@ -392,4 +397,9 @@ class Pipeline extends Module{
     val dmem_read_clint  = io.dmem.ren && (io.dmem.raddr === "h0200bff8".U || io.dmem.raddr === "h02004000".U)
     val dmem_write_clint = io.dmem.wen && (io.dmem.waddr === "h0200bff8".U || io.dmem.waddr === "h02004000".U)
     io.commit_clint := commit_valid && RegNext(dmem_read_clint || dmem_write_clint)
+
+    io.commit_dmem_ren      := RegEnable(io.dmem.ren, false.B, wbreg.io.en)
+    io.commit_dmem_raddr    := RegEnable(io.dmem.raddr, 0.U(64.W), wbreg.io.en)
+    io.commit_dmem_wen      := RegEnable(io.dmem.wen, false.B, wbreg.io.en)
+    io.commit_dmem_waddr    := RegEnable(io.dmem.waddr, 0.U(64.W), wbreg.io.en)
 }

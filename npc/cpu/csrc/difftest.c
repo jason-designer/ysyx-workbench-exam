@@ -4,9 +4,13 @@
 #include "reg.h"
 
 
-uint64_t cpu_difftest_valid = 0;
-void read_difftest_valid(unsigned char valid) {
-  cpu_difftest_valid = valid;
+Difftest_Info difftest_info = {.valid = false, .ren = false, .raddr = 0, .wen = false, .waddr = 0};
+void difftest_info_fetch(unsigned char valid, unsigned char ren, long long raddr, unsigned char wen, long long waddr){
+  difftest_info.valid = valid;
+  difftest_info.ren   = ren;
+  difftest_info.raddr = raddr;
+  difftest_info.wen   = wen;
+  difftest_info.waddr = waddr;
 }
 
 
@@ -95,6 +99,6 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc) {
 void init_cpu(){
     for(int i = 0; i < 32; i++) cpu.gpr[i] = 0;
     cpu.pc = RESET_VECTOR;
-    cpu_difftest_valid = 0;
+    difftest_info.valid = 0;
 }
 
