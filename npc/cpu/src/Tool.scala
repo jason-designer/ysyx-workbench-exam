@@ -86,6 +86,19 @@ class DMemory extends BlackBox with HasBlackBoxInline{
             """.stripMargin)
 }
 
+class IMemory_ extends Module{
+  val io = IO(new Bundle{
+    val ren   = Input(Bool())
+    val raddr = Input(UInt(64.W))
+    val rdata = Output(UInt(32.W))
+  })
+    val imem = Module(new IMemory)
+    imem.io.clk := clock
+    imem.io.ren := io.ren
+    imem.io.raddr := io.raddr
+    io.rdata := imem.io.rdata
+}
+
 class IMemory extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{
     val clk   = Input(Clock())
@@ -101,20 +114,10 @@ class IMemory extends BlackBox with HasBlackBoxInline{
            |            input  clk,
            |            input  ren,
            |            input  [63:0] raddr,
-           |            output reg [31:0] rdata);
-           |
-           |  wire [31:0] val; 
-           |
-           |  always @(*) begin
-           |    imem_read(ren, raddr, val);
-           |  end
+           |            output [31:0] rdata);
            |  
            |  always @(posedge clk) begin
-           |    if (clk && ren) begin
-           |      rdata <= val;
-           |    end else begin
-           |      rdata <= rdata;
-           |    end
+           |    imem_read(ren, raddr, rdata);
            |  end
            |
            |endmodule
@@ -122,6 +125,42 @@ class IMemory extends BlackBox with HasBlackBoxInline{
            |
             """.stripMargin)
 }
+
+
+// 会让reg变成wire
+// class IMemory extends BlackBox with HasBlackBoxInline{
+//   val io = IO(new Bundle{
+//     val clk   = Input(Clock())
+//     val ren   = Input(Bool())
+//     val raddr = Input(UInt(64.W))
+//     val rdata = Output(UInt(32.W))
+//   })
+//     setInline("IMemory.v",
+//             """
+//            |import "DPI-C" function void imem_read(input logic ren, input longint raddr, output int rdata);
+//            |
+//            |module IMemory(
+//            |            input  clk,
+//            |            input  ren,
+//            |            input  [63:0] raddr,
+//            |            output [31:0] rdata);
+//            |
+//            |  wire [31:0] val; 
+//            |
+//            |  always @(*) begin
+//            |    
+//            |  end
+//            |  
+//            |  always @(posedge clk) begin
+//            |    imem_read(ren, raddr, rdata);
+//            |  end
+//            |
+//            |endmodule
+//            |
+//            |
+//             """.stripMargin)
+// }
+
 
 class Difftest extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{

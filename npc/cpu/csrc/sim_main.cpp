@@ -107,7 +107,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 char str[100];
                 uint32_t inst = commit_info.inst;
                 disassemble(str, 100, 0x80000000, (uint8_t*)&inst, 4);
-                // printf("pc = %lx : %08x : %s\n", commit_info.pc, commit_info.inst, str);
+                printf("pc = %lx : %08x : %s\n", commit_info.pc, commit_info.inst, str);
                 
 
             }
