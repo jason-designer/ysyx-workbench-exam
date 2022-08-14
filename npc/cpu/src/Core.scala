@@ -117,7 +117,20 @@ class Core extends Module{
     itrace.io.commit    := commit
     itrace.io.pc        := pc
     itrace.io.inst      := inst
-
+    // mtrace
+    val mtrace = Module(new MTrace)
+    mtrace.io.clk   := clock
+    mtrace.io.reset := reset
+    mtrace.io.valid := pipeline.io.mem_valid
+    mtrace.io.pc    := pipeline.io.mem_pc
+    mtrace.io.inst  := pipeline.io.mem_inst
+    mtrace.io.ren   := pipeline.io.dmem.ren
+    mtrace.io.raddr := pipeline.io.dmem.raddr
+    mtrace.io.rdata := io.dmem.rdata
+    mtrace.io.wen   := pipeline.io.dmem.wen
+    mtrace.io.waddr := pipeline.io.dmem.waddr
+    mtrace.io.wdata := pipeline.io.dmem.wdata
+    mtrace.io.wmask := pipeline.io.dmem.wmask
 }
 
 

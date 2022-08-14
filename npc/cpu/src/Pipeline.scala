@@ -87,6 +87,10 @@ class Pipeline extends Module{
         val putch       = Output(Bool())
 
         val commit_clint = Output(Bool())   // 用于skip掉difftest
+
+        // info
+        val mem_pc      = Output(UInt(64.W))
+        val mem_inst    = Output(UInt(32.W))
     })
     val ifu     = Module(new IFetch)
     val idu     = Module(new Decode)
@@ -206,6 +210,9 @@ class Pipeline extends Module{
     memreg.io.in.csr_wen    := ieu.io.csr_wen
     memreg.io.in.csr_waddr  := ieu.io.csr_waddr
     memreg.io.in.csr_wdata  := ieu.io.csr_wdata
+
+    io.mem_pc   := memreg.io.out.pc
+    io.mem_inst := memreg.io.out.inst
     //preamu
     preamu.io.lu_code := memreg.io.out.lu_code
     preamu.io.su_code := memreg.io.out.su_code

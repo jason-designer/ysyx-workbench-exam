@@ -33,7 +33,7 @@ class ITrace extends BlackBox with HasBlackBoxInline{
   })
   setInline("ITrace.v",
           """
-          |import "DPI-C" function void commit_info_read(input logic commit, input longint pc, input int inst);
+          |import "DPI-C" function void commit_info(input logic commit, input longint pc, input int inst);
           |
           |module ITrace( input clk,
           |               input reset,
@@ -42,7 +42,50 @@ class ITrace extends BlackBox with HasBlackBoxInline{
           |               input [31:0] inst);
           |
           |  always @(posedge clk) begin
-          |    commit_info_read(commit, pc, inst);
+          |    commit_info(commit, pc, inst);
+          |  end
+          |endmodule
+          |
+          """.stripMargin)
+}
+
+class MTrace extends BlackBox with HasBlackBoxInline{
+  val io = IO(new Bundle{
+    val clk   = Input(Clock())
+    val reset = Input(Reset())  
+
+    val valid = Input(Bool())
+    val pc    = Input(UInt(64.W))
+    val inst  = Input(UInt(32.W))
+
+    val ren   = Input(Bool())
+    val raddr = Input(UInt(64.W))
+    val rdata = Input(UInt(64.W))
+
+    val wen   = Input(Bool())
+    val waddr = Input(UInt(64.W))
+    val wdata = Input(UInt(64.W))
+    val wmask = Input(UInt(8.W))
+  })
+  setInline("MTrace.v",
+          """
+          |import "DPI-C" function void dmem_info(input logic valid, input longint pc, input int inst, input logic ren, input longint raddr, input longint rdata, input logic wen, input longint waddr, input longint wdata, input byte wmask);
+          |
+          |module MTrace( input clk,
+          |               input reset,
+          |               input valid,
+          |               input [63:0] pc,            
+          |               input [31:0] inst,
+          |               input ren,                  
+          |               input [63:0] raddr,                 
+          |               input [63:0] rdata,                
+          |               input wen,                  
+          |               input [63:0] waddr,                 
+          |               input [63:0] wdata,                 
+          |               input [7:0]  wmask );
+          |
+          |  always @(posedge clk) begin
+          |    dmem_info(valid, pc, inst, ren, raddr, rdata, wen, waddr, wdata, wmask);
           |  end
           |endmodule
           |

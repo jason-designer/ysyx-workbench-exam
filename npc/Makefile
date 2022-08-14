@@ -73,6 +73,7 @@ sim:
 	-v $(VSRC_DIR)/RegFileBlackBox.v               	\
 	-v $(VSRC_DIR)/Halt.v                           \
 	-v $(VSRC_DIR)/ITrace.v							\
+	-v $(VSRC_DIR)/MTrace.v 						\
 	-v $(VSRC_DIR)/DMemory.v                        \
 	-v $(VSRC_DIR)/IMemory_asy.v              		\
 	-v $(VSRC_DIR)/Difftest.v                       \
