@@ -6,7 +6,6 @@ static Context* (*user_handler)(Event, Context*) = NULL;
 Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
-    // printf("--------------%p-----%d\n",c->mcause ,c->GPR1);
     switch (c->mcause) {
       // 先根据mcause判断是指令中断还是时钟中断，再用a7来判断哪种调用
       // 这里还要考虑哪些异常要给mepc加4

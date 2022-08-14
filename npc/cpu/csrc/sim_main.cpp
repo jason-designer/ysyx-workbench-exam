@@ -13,7 +13,7 @@
 /***************** sdb config *******************/ 
 #define DIFFTEST
 // #define TRACE_WAVE
-// #define ITRACE
+#define ITRACE
 // #define MTRACE 
 #define SIM_RESET_TIME 2
 /************************************************/

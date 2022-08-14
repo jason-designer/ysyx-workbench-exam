@@ -42,7 +42,7 @@ class Csr extends Module with CsrConstant{
         val clear_mtip  = Input(Bool())     
     })
     // Csr
-    val mstatus     = RegInit("h00001800".U(64.W))
+    val mstatus     = RegInit("ha00001800".U(64.W))     // 三期的difftest是1800，四期的spike的difftest前面有a
     val mtvec       = RegInit(0.U(64.W))
     val mepc        = RegInit(0.U(64.W))
     val mcause      = RegInit(0.U(64.W))
