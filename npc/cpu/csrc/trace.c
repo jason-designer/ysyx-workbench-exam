@@ -2,14 +2,14 @@
 
 
 CPU_Commit_Info commit_info = {.commit = false, .pc = 0, .inst = 0};
-void commit_info(unsigned char commit, long long pc, int inst){
+void commit_info_fetch(unsigned char commit, long long pc, int inst){
     commit_info.commit = commit;
     commit_info.pc = pc;
     commit_info.inst = inst;
 }
 
 Dmem_Info dmem_info = {.valid = false, .pc = 0, .inst = 0, .ren = false, .raddr = 0, .rdata = 0, .wen = 0, .waddr = 0, .wdata = 0, .wmask = 0};
-void dmem_info( unsigned char valid, long long pc, int inst, unsigned char ren, long long raddr, long long rdata, unsigned char wen, long long waddr, long long wdata, char wmask){
+void dmem_info_fetch( unsigned char valid, long long pc, int inst, unsigned char ren, long long raddr, long long rdata, unsigned char wen, long long waddr, long long wdata, char wmask){
     dmem_info.valid = valid;
     dmem_info.pc = pc;
     dmem_info.inst = inst;                        
@@ -22,8 +22,31 @@ void dmem_info( unsigned char valid, long long pc, int inst, unsigned char ren, 
     dmem_info.wmask = wmask;
 }
 
-// void dmem_trace(){
-//     Dmem_Info& d;
-//     d = dmem_info
-//     printf("");
-// }
+void dmem_trace(){
+    Dmem_Info& d = dmem_info;
+    printf("%d %llx %08lx %d %llx %llx %d %llx %llx %x\n",d.valid, d.pc, d.inst, d.ren, d.raddr, d.rdata, d.wen, d.waddr, d.wdata, d.wmask);
+}
+
+
+// iringbuf
+#define IRINGBUF_SIZE 30
+char iringbuf[IRINGBUF_SIZE][100];
+int iringbuf_index;
+
+void iringbuf_init(){
+    iringbuf_index = IRINGBUF_SIZE - 1;
+}
+
+void iringbuf_log_once(char* str){
+    iringbuf_index++;
+    if(iringbuf_index >= IRINGBUF_SIZE) iringbuf_index = 0;
+    strcpy(iringbuf[iringbuf_index], str);
+}
+
+void iringbuf_print(){
+    int i;
+    for(i = 0; i < IRINGBUF_SIZE; i++){
+        if(i == iringbuf_index) printf("-->[%2d]%s\n", i, iringbuf[i]);
+        else printf("   [%2d]%s\n", i, iringbuf[i]);
+    }
+}

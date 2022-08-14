@@ -129,4 +129,16 @@ update_am_test:
 	cp ../fceux-am/build/fceux-riscv64-npc.elf bin/am-test/mario/
 	cp ../fceux-am/build/fceux-riscv64-npc.txt bin/am-test/mario/
 
+update_nanos_lite:
+	mkdir -p bin/nanos_lite
+
+	cd ../nanos-lite/ && make ARCH=riscv64-npc update
+	cd ../nanos-lite/ && make ARCH=riscv64-npc
+	cp ../nanos-lite/build/nanos-lite-riscv64-npc.bin bin/nanos_lite/
+	cp ../nanos-lite/build/nanos-lite-riscv64-npc.elf bin/nanos_lite/
+	cp ../nanos-lite/build/nanos-lite-riscv64-npc.txt bin/nanos_lite/
+
+sim_nanos_lite:
+	make sim ALL=nanos_lite/nanos-lite-riscv64-npc.bin
+
 include ../Makefile

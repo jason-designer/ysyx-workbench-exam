@@ -74,6 +74,8 @@ class Core extends Module{
     // access memory
     io.imem <> pipeline.io.imem
     io.dmem <> pipeline.io.dmem
+    io.dmem.ren := pipeline.io.dmem.ren && pipeline.io.mem_valid
+    io.dmem.wen := pipeline.io.dmem.wen && pipeline.io.mem_valid
 
     /* ------------------------------------ debug ---------------------------------------- */
     // when(clock.asBool()){

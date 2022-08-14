@@ -11,7 +11,7 @@ typedef struct {
 } CPU_Commit_Info;
 
 extern CPU_Commit_Info commit_info;
-extern "C" void commit_info(unsigned char commit, long long pc, int inst);
+extern "C" void commit_info_fetch(unsigned char commit, long long pc, int inst);
 
 typedef struct {
   bool valid;
@@ -27,6 +27,10 @@ typedef struct {
 } Dmem_Info;
 
 extern Dmem_Info dmem_info;
-extern "C" void dmem_info(unsigned char valid, long long pc, int inst, unsigned char ren, long long raddr, long long rdata, unsigned char wen, long long waddr, long long wdata, char wmask);
+extern "C" void dmem_info_fetch(unsigned char valid, long long pc, int inst, unsigned char ren, long long raddr, long long rdata, unsigned char wen, long long waddr, long long wdata, char wmask);
+
+void iringbuf_init();
+void iringbuf_log_once(char* str);
+void iringbuf_print();
 
 #endif

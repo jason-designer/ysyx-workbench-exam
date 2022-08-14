@@ -33,7 +33,7 @@ class ITrace extends BlackBox with HasBlackBoxInline{
   })
   setInline("ITrace.v",
           """
-          |import "DPI-C" function void commit_info(input logic commit, input longint pc, input int inst);
+          |import "DPI-C" function void commit_info_fetch(input logic commit, input longint pc, input int inst);
           |
           |module ITrace( input clk,
           |               input reset,
@@ -42,7 +42,7 @@ class ITrace extends BlackBox with HasBlackBoxInline{
           |               input [31:0] inst);
           |
           |  always @(posedge clk) begin
-          |    commit_info(commit, pc, inst);
+          |    commit_info_fetch(commit, pc, inst);
           |  end
           |endmodule
           |
@@ -69,7 +69,7 @@ class MTrace extends BlackBox with HasBlackBoxInline{
   })
   setInline("MTrace.v",
           """
-          |import "DPI-C" function void dmem_info(input logic valid, input longint pc, input int inst, input logic ren, input longint raddr, input longint rdata, input logic wen, input longint waddr, input longint wdata, input byte wmask);
+          |import "DPI-C" function void dmem_info_fetch(input logic valid, input longint pc, input int inst, input logic ren, input longint raddr, input longint rdata, input logic wen, input longint waddr, input longint wdata, input byte wmask);
           |
           |module MTrace( input clk,
           |               input reset,
@@ -85,7 +85,7 @@ class MTrace extends BlackBox with HasBlackBoxInline{
           |               input [7:0]  wmask );
           |
           |  always @(posedge clk) begin
-          |    dmem_info(valid, pc, inst, ren, raddr, rdata, wen, waddr, wdata, wmask);
+          |    dmem_info_fetch(valid, pc, inst, ren, raddr, rdata, wen, waddr, wdata, wmask);
           |  end
           |endmodule
           |

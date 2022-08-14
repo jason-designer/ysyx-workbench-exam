@@ -11,9 +11,10 @@
 #include <sys/time.h>
 
 /***************** sdb config *******************/ 
-#define DIFFTEST
+// #define DIFFTEST
 #define TRACE_WAVE
 #define ITRACE
+// #define MTRACE 
 #define SIM_RESET_TIME 2
 /************************************************/
 void init_disasm(const char *triple);
@@ -21,6 +22,7 @@ void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 
 void init_sdb(){
     init_disasm("riscv64-pc-linux-gnu");
+    iringbuf_init();
 }
 
 
@@ -107,11 +109,20 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 char str[100];
                 uint32_t inst = commit_info.inst;
                 disassemble(str, 100, 0x80000000, (uint8_t*)&inst, 4);
-                printf("pc = %lx : %08x : %s\n", commit_info.pc, commit_info.inst, str);
-                
-
+                // printf("pc = %lx : %08x : %s\n", commit_info.pc, commit_info.inst, str);
+                char buf[100];
+                sprintf(buf, "pc = %lx : %08x : %s", commit_info.pc, commit_info.inst, str);
+                iringbuf_log_once(buf);
             }
             #endif
+            // mtrace
+            #ifdef MTRACE 
+            if(dmem_info.valid == 1 && (dmem_info.ren == 1 || dmem_info.wen == 1)){
+                void dmem_trace();
+                dmem_trace();
+            }
+            #endif
+
             // halt
             if((uint8_t)cpu_halt == 1) {
                 Log("Detected ebreak, sim quit");
@@ -160,6 +171,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     if(sdb_state == SDB_HIT_GOOD_TRAP) fail = 0;
 
     /***********************************************************************/
+
+    iringbuf_print();
+
+    /***********************************************************************/
     tfp->close();
     delete top;
     delete contextp;
@@ -204,7 +219,7 @@ int main(int argc, char** argv, char** env) {
     printf("------------------------simulation report------------------------\n");
     for(int i = 0; i < program_num; i++){
         info = program_end_info[i];
-        printf("%-30s: simtime=%6ld  ipc=%f clk/s=%ld  ", info->program_name, info->sim_time, info->ipc, info->clock_per_sec);
+        printf("%-30s: simtime=%6ld  ipc=%f clk/s=%6ld  ", info->program_name, info->sim_time, info->ipc, info->clock_per_sec);
         if(info->fail) Logc(ASNI_FG_RED, "FAIL");
         else Logc(ASNI_FG_GREEN, "PASS");
         total_clock += info->clock_number;
