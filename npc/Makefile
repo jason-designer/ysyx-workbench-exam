@@ -74,7 +74,7 @@ sim:
 	-v $(VSRC_DIR)/Halt.v                           \
 	-v $(VSRC_DIR)/ITrace.v							\
 	-v $(VSRC_DIR)/DMemory.v                        \
-	-v $(VSRC_DIR)/IMemory.v                        \
+	-v $(VSRC_DIR)/IMemory_asy.v              		\
 	-v $(VSRC_DIR)/Difftest.v                       \
 	-I $(CSRCS)                                     \
 	$(addprefix -CFLAGS , $(CFLAGS)) 				\

@@ -11,7 +11,7 @@ extern uint8_t* mem;
 
 uint64_t load_program(char* img_file);
 uint64_t read_memory(uint64_t addr, int length);
-extern "C" void imem_read(unsigned char ren, long long raddr, int *rdata);
+extern "C" void imem_read(unsigned char clk, unsigned char ren, long long raddr, int *rdata);
 extern "C" void pmem_read(unsigned char ren, long long raddr, long long *rdata);
 extern "C" void pmem_write(unsigned char wen, long long waddr, long long wdata, char wmask);
 

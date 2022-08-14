@@ -92,8 +92,9 @@ uint64_t wmask_to_64bit(uint8_t wmask){
     return x;
 }
 
-void imem_read(unsigned char ren, long long raddr, int *rdata) {
+void imem_read(unsigned char clk, unsigned char ren, long long raddr, int *rdata) {
     //Logc(ASNI_FG_YELLOW,"imem read mem, raddr = %lx, ren = %d",raddr, ren);
+    // printf("%d %d %lx\n",clk,ren,raddr);
     if(ren) *rdata = read_memory(raddr, 4);
 }
 
@@ -113,7 +114,7 @@ void pmem_write(unsigned char wen, long long waddr, long long wdata, char wmask)
     // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
     // `wmask`中每比特表示`wdata`中1个字节的掩码,
     // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-    //Logc(ASNI_FG_YELLOW,"dmem write mem, wen = %d, waddr = %llx, wdata = %llx, wmask = %x", wen, waddr, wdata, wmask);
+    // Logc(ASNI_FG_YELLOW,"dmem write mem, wen = %d, waddr = %llx, wdata = %llx, wmask = %x", wen, waddr, wdata, wmask);
     if(wen){
         if(waddr >= DEVICE_BASE){
             mmio_write_device(waddr, wdata, wmask);

@@ -8,10 +8,9 @@ class SimTop extends Module{
   })
 
   val core = Module(new Core)
-  val imemory = Module(new IMemory)
+  val imemory = Module(new IMemory_syn)
   val dmemory = Module(new DMemory)
   // imem
-  imemory.io.clk    := clock
   imemory.io.ren    := core.io.imem.en
   imemory.io.raddr  := core.io.imem.addr
   core.io.imem.data := imemory.io.rdata

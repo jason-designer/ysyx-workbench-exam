@@ -86,42 +86,43 @@ class DMemory extends BlackBox with HasBlackBoxInline{
             """.stripMargin)
 }
 
-class IMemory_ extends Module{
+class IMemory_syn extends Module{
   val io = IO(new Bundle{
     val ren   = Input(Bool())
     val raddr = Input(UInt(64.W))
     val rdata = Output(UInt(32.W))
   })
-    val imem = Module(new IMemory)
+    val raddr = RegEnable(io.raddr, 0.U, io.ren)
+    val clk = RegNext(clock.asBool(), false.B)
+    val imem = Module(new IMemory_asy)
     imem.io.clk := clock
-    imem.io.ren := io.ren
-    imem.io.raddr := io.raddr
+    imem.io.ren := true.B
+    imem.io.raddr := raddr
     io.rdata := imem.io.rdata
 }
 
-class IMemory extends BlackBox with HasBlackBoxInline{
+class IMemory_asy extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{
     val clk   = Input(Clock())
     val ren   = Input(Bool())
     val raddr = Input(UInt(64.W))
     val rdata = Output(UInt(32.W))
   })
-    setInline("IMemory.v",
+    setInline("IMemory_asy.v",
             """
-           |import "DPI-C" function void imem_read(input logic ren, input longint raddr, output int rdata);
+           |import "DPI-C" function void imem_read(input logic clk, input logic ren, input longint raddr, output int rdata);
            |
-           |module IMemory(
+           |module IMemory_asy(
            |            input  clk,
            |            input  ren,
            |            input  [63:0] raddr,
            |            output [31:0] rdata);
            |  
-           |  always @(posedge clk) begin
-           |    imem_read(ren, raddr, rdata);
+           |  always @(*) begin
+           |    imem_read(clk, ren, raddr, rdata);
            |  end
            |
            |endmodule
-           |
            |
             """.stripMargin)
 }
