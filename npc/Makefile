@@ -54,10 +54,14 @@ endif
 
 # project source
 # VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v")
-# CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-# CSRCS +=
+CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
-LDFLAGS += -lSDL2 -lSDL2_image -ldl
+CFLAGS += -lasan
+CFLAGS += $(shell llvm-config --cxxflags)
+
+LDFLAGS += -ldl
+LDFLAGS += -lSDL2 -lSDL2_image 
+LDFLAGS += $(shell llvm-config --libs)
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
@@ -65,14 +69,15 @@ sim:
 	verilator -Wall --cc --exe --build --trace      \
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
-	-Wno-LATCH                                      \
+	-Wno-LATCH -Wno-UNOPTFLAT                    	\
 	-v $(VSRC_DIR)/RegFileBlackBox.v               	\
 	-v $(VSRC_DIR)/Halt.v                           \
+	-v $(VSRC_DIR)/ITrace.v							\
 	-v $(VSRC_DIR)/DMemory.v                        \
 	-v $(VSRC_DIR)/IMemory.v                        \
 	-v $(VSRC_DIR)/Difftest.v                       \
-	-I $(CSRC_DIR)/**.c                       		\
-	-CFLAGS " -lasan "                              \
+	-I $(CSRCS)                                     \
+	$(addprefix -CFLAGS , $(CFLAGS)) 				\
 	$(addprefix -LDFLAGS , $(LDFLAGS)) 				\
     --top-module SimTop                             \
     --Mdir $(VERILATOR_DIR)                         \

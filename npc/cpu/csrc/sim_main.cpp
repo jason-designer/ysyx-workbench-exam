@@ -7,13 +7,22 @@
 #include "reg.h"
 #include "difftest.h"
 #include "device.h"
+#include "trace.h"
 #include <sys/time.h>
 
 /***************** sdb config *******************/ 
 #define DIFFTEST
-#define TRACE
+#define TRACE_WAVE
+#define ITRACE
 #define SIM_RESET_TIME 2
 /************************************************/
+void init_disasm(const char *triple);
+void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+
+void init_sdb(){
+    init_disasm("riscv64-pc-linux-gnu");
+}
+
 
 uint64_t get_sys_time_us(){
     struct timeval tv;
@@ -84,13 +93,25 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         top->clock = sim_time % 2;                                                          
         top->eval();   
         // trace
-        #ifdef TRACE                      
+        #ifdef TRACE_WAVE                      
         tfp->dump(contextp->time());
         #endif
         // SDL quit
         if(sdb_state == SDB_QUIT) break;
-        // rtl debug
+        
+        // do every clk
         if(sim_time >= SIM_RESET_TIME && sim_time % 2 == 0){
+            // itrace
+            #ifdef ITRACE 
+            if(commit_info.commit){
+                char str[100];
+                uint32_t inst = commit_info.inst;
+                disassemble(str, 100, 0x80000000, (uint8_t*)&inst, 4);
+                // printf("pc = %lx : %08x : %s\n", commit_info.pc, commit_info.inst, str);
+                
+
+            }
+            #endif
             // halt
             if((uint8_t)cpu_halt == 1) {
                 Log("Detected ebreak, sim quit");
@@ -124,6 +145,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 inst_number++;  //记录commit的指令数
             }
             #endif
+
         } 
         contextp->timeInc(1);
         sim_time++;
@@ -157,6 +179,9 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
 }
 
 int main(int argc, char** argv, char** env) {
+    // 初始化
+    init_sdb();
+    //
     int program_num = argc - 2;
     char* tfp_file = argv[1];
     // 加载默认程序

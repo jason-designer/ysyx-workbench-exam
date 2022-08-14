@@ -23,6 +23,32 @@ class Halt extends BlackBox with HasBlackBoxInline{
             """.stripMargin)
 }
 
+class ITrace extends BlackBox with HasBlackBoxInline{
+  val io = IO(new Bundle{
+    val clk = Input(Clock())
+    val reset = Input(Reset())  
+    val commit = Input(Bool())
+    val pc = Input(UInt(64.W))
+    val inst = Input(UInt(32.W))
+  })
+  setInline("ITrace.v",
+          """
+          |import "DPI-C" function void commit_info_read(input logic commit, input longint pc, input int inst);
+          |
+          |module ITrace( input clk,
+          |               input reset,
+          |               input commit,
+          |               input [63:0] pc,            
+          |               input [31:0] inst);
+          |
+          |  always @(posedge clk) begin
+          |    commit_info_read(commit, pc, inst);
+          |  end
+          |endmodule
+          |
+          """.stripMargin)
+}
+
 class DMemory extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{
     val clk   = Input(Clock())
@@ -84,7 +110,7 @@ class IMemory extends BlackBox with HasBlackBoxInline{
            |  end
            |  
            |  always @(posedge clk) begin
-           |    if (clk) begin
+           |    if (clk && ren) begin
            |      rdata <= val;
            |    end else begin
            |      rdata <= rdata;

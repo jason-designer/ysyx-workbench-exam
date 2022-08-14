@@ -101,16 +101,23 @@ class Core extends Module{
     val read_mcycle = (inst & "hfff0307f".U) === "hb0002073".U 
     val rtthread_test_skip =  pc === "h80005360".U // 读mip
     val skip = putch || read_mcycle || pipeline.io.commit_clint || rtthread_test_skip
-    
+    // halt
     val halt = Module(new Halt)
     halt.io.clk   := clock
     halt.io.reset := reset
     halt.io.halt  := inst === EBREAK || inst === "h0000006b".U 
-
     // difftest
     val difftest = Module(new Difftest)
     difftest.io.valid := commit
     difftest.io.pc    := pc
+    // itrace
+    val itrace = Module(new ITrace)
+    itrace.io.clk       := clock
+    itrace.io.reset     := reset
+    itrace.io.commit    := commit
+    itrace.io.pc        := pc
+    itrace.io.inst      := inst
+
 }
 
 
