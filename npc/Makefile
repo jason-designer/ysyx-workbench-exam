@@ -98,7 +98,6 @@ sim:
 	-v $(VSRC_DIR)/MTrace.v 						\
 	-v $(VSRC_DIR)/DMemory.v                        \
 	-v $(VSRC_DIR)/IMemory_asy.v              		\
-	-v $(VSRC_DIR)/Difftest.v                       \
 	-I $(CSRCS)                                     \
 	$(addprefix -CFLAGS , $(CFLAGS)) 				\
 	$(addprefix -LDFLAGS , $(LDFLAGS)) 				\

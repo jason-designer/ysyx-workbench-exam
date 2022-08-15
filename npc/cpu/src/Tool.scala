@@ -215,37 +215,3 @@ class IMemory_asy extends BlackBox with HasBlackBoxInline{
 //            |
 //             """.stripMargin)
 // }
-
-
-class Difftest extends BlackBox with HasBlackBoxInline{
-  val io = IO(new Bundle{
-    val valid       = Input(Bool())
-    val pc          = Input(UInt(64.W))
-    val ren         = Input(Bool())
-    val raddr       = Input(UInt(64.W))
-    val wen         = Input(Bool())
-    val waddr       = Input(UInt(64.W))
-  })
-  setInline("Difftest.v",
-            """
-           |import "DPI-C" function void difftest_info_fetch(input logic valid, input logic ren, input longint raddr, input logic wen, input longint waddr);
-           |import "DPI-C" function void read_pc(input longint pc);
-           |
-           |module Difftest(input valid,
-           |                input [63:0] pc,
-           |                input ren,
-           |                input [63:0] raddr,
-           |                input wen,
-           |                input [63:0] waddr
-           |                );
-           |
-           |  always @(*) begin
-           |    difftest_info_fetch(valid, ren, raddr, wen, waddr);
-           |    read_pc(pc);
-           |  end
-           |
-           |endmodule
-           |
-            """.stripMargin)
-}
-
