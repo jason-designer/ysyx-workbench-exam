@@ -48,9 +48,31 @@ endif
 ifdef SIMALL
 IMG_FILE = $(ALL3_TEST_FILE) $(ALL4_TEST_FILE)
 endif
+
 ifdef ALL
 IMG_FILE = $(NPC_HOME)/bin/$(ALL)
+ifeq ($(ALL),h)
+IMG_FILE = $(NPC_HOME)/bin/am-test/hello/amtest-riscv64-npc.bin
 endif
+ifeq ($(ALL),t)
+IMG_FILE = $(NPC_HOME)/bin/am-test/rtc/amtest-riscv64-npc.bin
+endif
+ifeq ($(ALL),k)
+IMG_FILE = $(NPC_HOME)/bin/am-test/keyboard/amtest-riscv64-npc.bin
+endif
+ifeq ($(ALL),v)
+IMG_FILE = $(NPC_HOME)/bin/am-test/video/amtest-riscv64-npc.bin
+endif
+ifeq ($(ALL),mario)
+IMG_FILE = $(NPC_HOME)/bin/am-test/mario/fceux-riscv64-npc.bin
+endif
+ifeq ($(ALL),nanos)
+IMG_FILE = $(NPC_HOME)/bin/nanos_lite/nanos-lite-riscv64-npc.bin
+endif
+
+
+endif
+
 
 # project source
 # VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v")
@@ -137,8 +159,5 @@ update_nanos_lite:
 	cp ../nanos-lite/build/nanos-lite-riscv64-npc.bin bin/nanos_lite/
 	cp ../nanos-lite/build/nanos-lite-riscv64-npc.elf bin/nanos_lite/
 	cp ../nanos-lite/build/nanos-lite-riscv64-npc.txt bin/nanos_lite/
-
-sim_nanos_lite:
-	make sim ALL=nanos_lite/nanos-lite-riscv64-npc.bin
 
 include ../Makefile

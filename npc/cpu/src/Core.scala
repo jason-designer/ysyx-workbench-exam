@@ -76,23 +76,6 @@ class Core extends Module{
     io.dmem <> pipeline.io.dmem
     io.dmem.ren := pipeline.io.dmem.ren && pipeline.io.mem_valid
     io.dmem.wen := pipeline.io.dmem.wen && pipeline.io.mem_valid
-
-    /* ------------------------------------ debug ---------------------------------------- */
-    // when(clock.asBool()){
-    //     val commit = pipeline.io.commit
-    //     val pc = pipeline.io.commit_pc
-    //     val inst = pipeline.io.commit_inst
-
-    //     val en = dmmio.io.dmem.en
-    //     val op = dmmio.io.dmem.op
-    //     val addr = dmmio.io.dmem.addr
-    //     val wdata = dmmio.io.dmem.wdata
-    //     val wmask = dmmio.io.dmem.wmask
-    //     val transfer = dmmio.io.dmem.transfer
-    //     val rdata = dmmio.io.dmem.rdata
-
-    //     // printf("valid=%d pc=%x inst=%x %d %d %x %x %x %d %x \n", commit, pc, inst, en, op, addr, wdata, wmask, transfer, rdata)
-    // }
         
     /* ------------------------------------ use difftest ---------------------------------------- */
     val commit      = pipeline.io.commit
@@ -123,6 +106,10 @@ class Core extends Module{
     itrace.io.commit    := commit
     itrace.io.pc        := pc
     itrace.io.inst      := inst
+    itrace.io.ren       := pipeline.io.commit_dmem_ren
+    itrace.io.raddr     := pipeline.io.commit_dmem_raddr
+    itrace.io.wen       := pipeline.io.commit_dmem_wen
+    itrace.io.waddr     := pipeline.io.commit_dmem_waddr
     // mtrace
     val mtrace = Module(new MTrace)
     mtrace.io.clk   := clock

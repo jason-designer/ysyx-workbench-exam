@@ -8,10 +8,14 @@ typedef struct {
   bool commit;
   uint64_t pc;
   uint32_t inst;
+  bool ren;
+  uint64_t raddr;
+  bool wen;
+  uint64_t waddr;
 } CPU_Commit_Info;
 
 extern CPU_Commit_Info commit_info;
-extern "C" void commit_info_fetch(unsigned char commit, long long pc, int inst);
+extern "C" void commit_info_fetch(unsigned char commit, long long pc, int inst, unsigned char ren, long long raddr, unsigned char wen, long long waddr);
 
 typedef struct {
   bool valid;

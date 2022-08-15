@@ -27,22 +27,33 @@ class ITrace extends BlackBox with HasBlackBoxInline{
   val io = IO(new Bundle{
     val clk = Input(Clock())
     val reset = Input(Reset())  
+
     val commit = Input(Bool())
     val pc = Input(UInt(64.W))
     val inst = Input(UInt(32.W))
+
+    val ren   = Input(Bool())
+    val raddr = Input(UInt(64.W))
+
+    val wen   = Input(Bool())
+    val waddr = Input(UInt(64.W))
   })
   setInline("ITrace.v",
           """
-          |import "DPI-C" function void commit_info_fetch(input logic commit, input longint pc, input int inst);
+          |import "DPI-C" function void commit_info_fetch(input logic commit, input longint pc, input int inst, input logic ren, input longint raddr, input logic wen, input longint waddr);
           |
           |module ITrace( input clk,
           |               input reset,
           |               input commit,
           |               input [63:0] pc,            
-          |               input [31:0] inst);
+          |               input [31:0] inst,
+          |               input ren,                  
+          |               input [63:0] raddr,                            
+          |               input wen,                  
+          |               input [63:0] waddr);                
           |
-          |  always @(posedge clk) begin
-          |    commit_info_fetch(commit, pc, inst);
+          |  always @(*) begin
+          |    commit_info_fetch(commit, pc, inst, ren, raddr, wen, waddr);
           |  end
           |endmodule
           |
@@ -84,7 +95,7 @@ class MTrace extends BlackBox with HasBlackBoxInline{
           |               input [63:0] wdata,                 
           |               input [7:0]  wmask );
           |
-          |  always @(posedge clk) begin
+          |  always @(*) begin
           |    dmem_info_fetch(valid, pc, inst, ren, raddr, rdata, wen, waddr, wdata, wmask);
           |  end
           |endmodule

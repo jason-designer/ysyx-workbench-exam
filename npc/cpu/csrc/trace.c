@@ -1,11 +1,15 @@
 #include"trace.h"
 
 
-CPU_Commit_Info commit_info = {.commit = false, .pc = 0, .inst = 0};
-void commit_info_fetch(unsigned char commit, long long pc, int inst){
-    commit_info.commit = commit;
-    commit_info.pc = pc;
-    commit_info.inst = inst;
+CPU_Commit_Info commit_info = {.commit = false, .pc = 0, .inst = 0, .ren = false, .raddr = 0, .wen = false, .waddr = 0};
+void commit_info_fetch(unsigned char commit, long long pc, int inst, unsigned char ren, long long raddr, unsigned char wen, long long waddr){
+    commit_info.commit  = commit;
+    commit_info.pc      = pc;
+    commit_info.inst    = inst;
+    commit_info.ren     = ren;
+    commit_info.raddr   = raddr;
+    commit_info.wen     = wen;
+    commit_info.waddr   = waddr;
 }
 
 Dmem_Info dmem_info = {.valid = false, .pc = 0, .inst = 0, .ren = false, .raddr = 0, .rdata = 0, .wen = 0, .waddr = 0, .wdata = 0, .wmask = 0};
@@ -45,10 +49,10 @@ void iringbuf_log_once(char* str){
 
 void iringbuf_print(){
     int i;
-    printf("-------------------------  iringbuf ---------------------------\n");
+    printf("------------------------- iringbuf ---------------------------\n");
     for(i = 0; i < IRINGBUF_SIZE; i++){
         if(i == iringbuf_index) printf("-->[%2d]%s\n", i, iringbuf[i]);
         else printf("   [%2d]%s\n", i, iringbuf[i]);
     }
-    printf("---------------------------------------------------------------\n");
+    printf("--------------------------------------------------------------\n");
 }

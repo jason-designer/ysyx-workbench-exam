@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 #include "memory.h"
 #include "reg.h"
+#include "trace.h"
 
 
 Difftest_Info difftest_info = {.valid = false, .ren = false, .raddr = 0, .wen = false, .waddr = 0};
@@ -99,6 +100,6 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint64_t pc) {
 void init_cpu(){
     for(int i = 0; i < 32; i++) cpu.gpr[i] = 0;
     cpu.pc = RESET_VECTOR;
-    difftest_info.valid = 0;
+    commit_info.commit = 0;
 }
 

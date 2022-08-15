@@ -15,6 +15,8 @@
 // #define TRACE_WAVE
 #define ITRACE
 // #define MTRACE 
+#define DTRACE
+
 #define SIM_RESET_TIME 2
 /************************************************/
 void init_disasm(const char *triple);
@@ -71,10 +73,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     device_init();
 
     #ifdef DIFFTEST
-    //init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
-    init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
+    init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
+    // init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
     #else
-    difftest_info.valid = 0;
+    commit_info.commit = 0;
     #endif
 
     // 
@@ -123,6 +125,11 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
             }
             #endif
 
+            // DTRACE
+            #ifdef DTRACE
+            // if()
+            #endif
+
             // halt
             if((uint8_t)cpu_halt == 1) {
                 Log("Detected ebreak, sim quit");
@@ -133,21 +140,21 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
             // difftest
             #ifdef DIFFTEST
             if(start_difftest == false){  //这是为了跳过第一个valid
-                if(difftest_info.valid) {
+                if(commit_info.commit) {
                     start_difftest = true;
                     pre_pc = pc;
-                    pc = cpu_pc;
+                    pc = commit_info.pc;
                 }
             }
             else{
-                if(difftest_info.valid){
+                if(commit_info.commit){
                     inst_number++;  //记录commit的指令数
                     pre_pc = pc;
-                    pc = cpu_pc;
+                    pc = commit_info.pc;
                     isa_reg_update(pc, cpu_gpr);
 
-                    bool read_device = difftest_info.ren == 1 && difftest_info.raddr >= DEVICE_BASE;
-                    bool write_device = difftest_info.wen == 1 && difftest_info.waddr >= DEVICE_BASE;
+                    bool read_device = commit_info.ren == 1 && commit_info.raddr >= DEVICE_BASE;
+                    bool write_device = commit_info.wen == 1 && commit_info.waddr >= DEVICE_BASE;
                     if(read_device || write_device){            // is device, skip difftest
                         difftest_skip_ref();
                     }
@@ -160,7 +167,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
                 }
             }
             #else
-            if(difftest_info.valid){
+            if(commit_info.commit){
                 inst_number++;  //记录commit的指令数
             }
             #endif
