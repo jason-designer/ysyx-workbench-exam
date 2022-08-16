@@ -4,23 +4,153 @@ import chisel3.util.experimental._
 import Instructions._
 // import difftest._
 
+// class Core extends Module{
+//     val io = IO(new Bundle{
+//         val imem = new ImemIO
+//         val dmem = new DmemIO
+//     })
+//     val pipeline        = Module(new Pipeline)
+//     val rfu             = Module(new RegFile)
+//     val csru            = Module(new Csr)
+//     // mul/div
+//     val mu              = Module(new MU)
+//     val du              = Module(new DU)
+
+//     // pipeline control
+//     val env_wait = (pipeline.io.id_ecall || pipeline.io.id_mret || pipeline.io.id_intr) && (pipeline.io.ie_valid || pipeline.io.mem_valid || pipeline.io.wb_valid)
+//     val env_go = !pipeline.io.stall_id && (pipeline.io.id_ecall || pipeline.io.id_mret || pipeline.io.id_intr) && (!pipeline.io.ie_valid && !pipeline.io.mem_valid && !pipeline.io.wb_valid)
+//     val imem_not_ok = false.B //!icache.io.imem.ok
+//     val dmem_not_ok = false.B //!dmmio.io.dmem.ok
+
+//     pipeline.io.stall_id    := pipeline.io.rfconflict || imem_not_ok || env_wait
+//     pipeline.io.stall_ie    := mu.io.stall || du.io.stall
+//     pipeline.io.stall_mem   := false.B
+//     pipeline.io.stall_wb    := dmem_not_ok
+
+//     // pipeline <--> regfile
+//     rfu.io.rs1_addr         := pipeline.io.rs1_addr 
+//     rfu.io.rs2_addr         := pipeline.io.rs2_addr
+//     pipeline.io.rs1_data    := rfu.io.rs1_data
+//     pipeline.io.rs2_data    := rfu.io.rs2_data
+//     rfu.io.rd_en    := pipeline.io.commit && pipeline.io.rf_rd_en
+//     rfu.io.rd_addr  := pipeline.io.rf_rd_addr
+//     rfu.io.rd_data  := pipeline.io.rf_rd_data
+
+//     // pipeline <--> mul/div
+//     mu.io.en            := pipeline.io.mu_code =/= 0.U && pipeline.io.ie_valid
+//     mu.io.mu_code       := pipeline.io.mu_code
+//     mu.io.op1           := pipeline.io.mu_op1
+//     mu.io.op2           := pipeline.io.mu_op2
+//     pipeline.io.mu_out  := mu.io.mu_out
+
+//     du.io.en            := pipeline.io.du_code =/= 0.U && pipeline.io.ie_valid
+//     du.io.du_code       := pipeline.io.du_code
+//     du.io.op1           := pipeline.io.du_op1
+//     du.io.op2           := pipeline.io.du_op2
+//     pipeline.io.du_out  := du.io.du_out
+
+//     // pipeline <--> csr
+//     csru.io.raddr           := pipeline.io.csr_raddr
+//     pipeline.io.csr_rdata   := csru.io.rdata
+//     csru.io.wen             := pipeline.io.commit && pipeline.io.csr_wen
+//     csru.io.waddr           := pipeline.io.csr_waddr
+//     csru.io.wdata           := pipeline.io.csr_wdata
+
+//     csru.io.set_mtip    := false.B//clintreg.io.set_mtip
+//     csru.io.clear_mtip  := false.B//clintreg.io.clear_mtip
+    
+//     csru.io.interrupt   := env_go && pipeline.io.id_intr
+//     csru.io.cause       := pipeline.io.id_cause
+
+//     pipeline.io.intr    := csru.io.time_intr && !env_go     // 防止连续给出两个intr
+//     pipeline.io.cause   := "h8000000000000007".U
+
+//     pipeline.io.csr_mtvec   := csru.io.mtvec
+//     pipeline.io.csr_mepc    := csru.io.mepc
+//     csru.io.ecall   := env_go && pipeline.io.id_ecall
+//     csru.io.mret    := env_go && pipeline.io.id_mret
+//     csru.io.pc      := pipeline.io.id_pc
+
+//     // access memory
+//     io.imem <> pipeline.io.imem
+//     io.dmem <> pipeline.io.dmem
+//     io.dmem.ren := pipeline.io.dmem.ren && pipeline.io.mem_valid
+//     io.dmem.wen := pipeline.io.dmem.wen && pipeline.io.mem_valid
+        
+//     /* ------------------------------------ use difftest ---------------------------------------- */
+//     val commit      = pipeline.io.commit
+//     val pc          = pipeline.io.commit_pc
+//     val inst        = pipeline.io.commit_inst
+    
+//     val putch       = inst === "h0000007b".U
+//     val read_mcycle = (inst & "hfff0307f".U) === "hb0002073".U 
+//     val rtthread_test_skip =  pc === "h80005360".U // 读mip
+//     val skip = putch || read_mcycle || pipeline.io.commit_clint || rtthread_test_skip
+//     // halt
+//     val halt = Module(new Halt)
+//     halt.io.clk   := clock
+//     halt.io.reset := reset
+//     halt.io.halt  := inst === EBREAK || inst === "h0000006b".U 
+//     // itrace
+//     val itrace = Module(new ITrace)
+//     itrace.io.clk       := clock
+//     itrace.io.reset     := reset
+//     itrace.io.commit    := commit
+//     itrace.io.pc        := pc
+//     itrace.io.inst      := inst
+//     itrace.io.ren       := pipeline.io.commit_dmem_ren
+//     itrace.io.raddr     := pipeline.io.commit_dmem_raddr
+//     itrace.io.wen       := pipeline.io.commit_dmem_wen
+//     itrace.io.waddr     := pipeline.io.commit_dmem_waddr
+//     // mtrace
+//     val mtrace = Module(new MTrace)
+//     mtrace.io.clk   := clock
+//     mtrace.io.reset := reset
+//     mtrace.io.valid := pipeline.io.mem_valid
+//     mtrace.io.pc    := pipeline.io.mem_pc
+//     mtrace.io.inst  := pipeline.io.mem_inst
+//     mtrace.io.ren   := pipeline.io.dmem.ren
+//     mtrace.io.raddr := pipeline.io.dmem.raddr
+//     mtrace.io.rdata := io.dmem.rdata
+//     mtrace.io.wen   := pipeline.io.dmem.wen
+//     mtrace.io.waddr := pipeline.io.dmem.waddr
+//     mtrace.io.wdata := pipeline.io.dmem.wdata
+//     mtrace.io.wmask := pipeline.io.dmem.wmask
+// }
+
+
 class Core extends Module{
     val io = IO(new Bundle{
-        val imem = new ImemIO
-        val dmem = new DmemIO
+        val axi = new AxiIO
     })
     val pipeline        = Module(new Pipeline)
     val rfu             = Module(new RegFile)
     val csru            = Module(new Csr)
+    val fence           = Module(new Fence)
     // mul/div
     val mu              = Module(new MU)
     val du              = Module(new DU)
+    // imem
+    val icache          = Module(new ICache)
+    val icacheaxi       = Module(new ICacheSocAxi)
+    // dmem
+    val dmmio           = Module(new DMMIO)
+    val dcache          = Module(new DCache)
+    val clintreg        = Module(new ClintReg)
+    val dcachebypass    = Module(new DCacheBypass)
+    //
+    val axi             = Module(new AXI)
+
 
     // pipeline control
     val env_wait = (pipeline.io.id_ecall || pipeline.io.id_mret || pipeline.io.id_intr) && (pipeline.io.ie_valid || pipeline.io.mem_valid || pipeline.io.wb_valid)
     val env_go = !pipeline.io.stall_id && (pipeline.io.id_ecall || pipeline.io.id_mret || pipeline.io.id_intr) && (!pipeline.io.ie_valid && !pipeline.io.mem_valid && !pipeline.io.wb_valid)
-    val imem_not_ok = false.B //!icache.io.imem.ok
-    val dmem_not_ok = false.B //!dmmio.io.dmem.ok
+    val imem_not_ok = !icache.io.imem.ok
+    val dmem_not_ok = !dmmio.io.dmem.ok
+
+    val fence_wait = pipeline.io.id_fencei && (pipeline.io.ie_valid || pipeline.io.mem_valid || pipeline.io.wb_valid)
+    fence.io.go := pipeline.io.id_fencei && !pipeline.io.ie_valid && !pipeline.io.mem_valid && !pipeline.io.wb_valid
+    val fence_running = !fence.io.ok    
 
     pipeline.io.stall_id    := pipeline.io.rfconflict || imem_not_ok || env_wait
     pipeline.io.stall_ie    := mu.io.stall || du.io.stall
@@ -71,12 +201,52 @@ class Core extends Module{
     csru.io.mret    := env_go && pipeline.io.id_mret
     csru.io.pc      := pipeline.io.id_pc
 
-    // access memory
-    io.imem <> pipeline.io.imem
-    io.dmem <> pipeline.io.dmem
-    io.dmem.ren := pipeline.io.dmem.ren && pipeline.io.mem_valid
-    io.dmem.wen := pipeline.io.dmem.wen && pipeline.io.mem_valid
-        
+    // fence
+    icache.io.fence <> fence.io.ifence
+    dcache.io.fence <> fence.io.dfence
+
+    // pipeline <--> memory <--> axi
+    /******************* access memory *****************
+
+       pipeline ->|-> dmmio -->|-> dcache ------->|-> axi
+                  |            |-> clintreg       |
+                  |            |-> dcachebypass ->| 
+                  |                               |
+                  |-> icache ----> icacheaxi ---->|      
+
+    ****************************************************/                                                                    
+    icache.io.imem.addr     := pipeline.io.imem.addr
+    icache.io.imem.en       := pipeline.io.imem.en
+    pipeline.io.imem.data   := icache.io.imem.data
+
+    val dmem_en = pipeline.io.dmem.ren || pipeline.io.dmem.wen 
+    val dmem_op = pipeline.io.dmem.wen   // 按理说ren和wen不会同时为true
+    val dmem_addr = Mux(dmem_op, pipeline.io.dmem.waddr, pipeline.io.dmem.raddr)
+    dmmio.io.dmem.en        := dmem_en && pipeline.io.mem_valid
+    dmmio.io.dmem.op        := dmem_op
+    dmmio.io.dmem.addr      := dmem_addr
+    dmmio.io.dmem.wdata     := pipeline.io.dmem.wdata
+    dmmio.io.dmem.wmask     := pipeline.io.dmem.wmask
+    dmmio.io.dmem.transfer  := pipeline.io.dmem_transfer
+    pipeline.io.dmem.rdata  := dmmio.io.dmem.rdata
+    
+    icache.io.axi <> icacheaxi.io.in
+    icacheaxi.io.out0 <> axi.io.icacheio
+    icacheaxi.io.out1 <> axi.io.icacheBypassIO
+
+    dmmio.io.mem0 <> dcache.io.dmem
+    dmmio.io.mem1 <> clintreg.io.mem
+    dmmio.io.mem2 <> dcachebypass.io.dmem
+
+    dcache.io.axi       <> axi.io.dcacheio
+    dcachebypass.io.axi <> axi.io.dcacheBypassIO
+
+    axi.io.out.ar <> io.axi.ar
+    axi.io.out.r  <> io.axi.r
+    axi.io.out.aw <> io.axi.aw
+    axi.io.out.w  <> io.axi.w
+    axi.io.out.b  <> io.axi.b 
+       
     /* ------------------------------------ use difftest ---------------------------------------- */
     val commit      = pipeline.io.commit
     val pc          = pipeline.io.commit_pc
@@ -111,15 +281,12 @@ class Core extends Module{
     mtrace.io.inst  := pipeline.io.mem_inst
     mtrace.io.ren   := pipeline.io.dmem.ren
     mtrace.io.raddr := pipeline.io.dmem.raddr
-    mtrace.io.rdata := io.dmem.rdata
+    mtrace.io.rdata := pipeline.io.dmem.rdata
     mtrace.io.wen   := pipeline.io.dmem.wen
     mtrace.io.waddr := pipeline.io.dmem.waddr
     mtrace.io.wdata := pipeline.io.dmem.wdata
     mtrace.io.wmask := pipeline.io.dmem.wmask
 }
-
-
-
 
 
 

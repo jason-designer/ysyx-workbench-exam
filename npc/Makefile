@@ -76,6 +76,7 @@ endif
 # project source
 # VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v")
 CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v" -not -name "SimTop.v")
 
 CFLAGS += -g 
 # CFLAGS += -O0
@@ -86,6 +87,13 @@ LDFLAGS += -ldl
 LDFLAGS += -lSDL2 -lSDL2_image 
 LDFLAGS += $(shell llvm-config --libs)
 
+# -v $(VSRC_DIR)/RegFileBlackBox.v               	\
+# -v $(VSRC_DIR)/Halt.v                           \
+# -v $(VSRC_DIR)/ITrace.v							\
+# -v $(VSRC_DIR)/MTrace.v 						\
+# -v $(VSRC_DIR)/DMemory.v                        \
+# -v $(VSRC_DIR)/IMemory_asy.v              		\
+
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	echo $(VSRCS)
@@ -93,12 +101,7 @@ sim:
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
 	-Wno-LATCH -Wno-UNOPTFLAT                    	\
-	-v $(VSRC_DIR)/RegFileBlackBox.v               	\
-	-v $(VSRC_DIR)/Halt.v                           \
-	-v $(VSRC_DIR)/ITrace.v							\
-	-v $(VSRC_DIR)/MTrace.v 						\
-	-v $(VSRC_DIR)/DMemory.v                        \
-	-v $(VSRC_DIR)/IMemory_asy.v              		\
+	-I $(VSRCS)                                     \
 	-I $(CSRCS)                                     \
 	$(addprefix -CFLAGS , $(CFLAGS)) 				\
 	$(addprefix -LDFLAGS , $(LDFLAGS)) 				\
