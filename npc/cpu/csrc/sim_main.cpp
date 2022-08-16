@@ -89,6 +89,50 @@
 //     axi_ref.rready  = top->io_master_rready;
 // }
 
+void axi_to_cpu(VSimTop* top, axi4<64,64,4>& axi){
+    // aw
+    top->io_master_awready  = axi.io.awready;
+    // w
+    top->io_master_wready   = axi.io.wready;
+    // b
+    top->io_master_bvalid   = axi.io.bvalid;
+    top->io_master_bresp    = axi.io.bresp;
+    top->io_master_bid      = axi.io.bid;
+    // ar
+    top->io_master_arready  = axi.io.arready;
+    // r
+    top->io_master_rvalid   = axi.io.rvalid;
+    top->io_master_rresp    = axi.io.rresp;
+    top->io_master_rdata    = axi.io.rdata;
+    top->io_master_rlast    = axi.io.rlast;
+    top->io_master_rid      = axi.io.rid;
+}
+
+void cpu_to_axi(VSimTop* top, axi4<64,64,4>& axi){
+    // aw
+    axi.io.awvalid = top->io_master_awvalid;
+    axi.io.awaddr  = top->io_master_awaddr - 0x80000000;
+    axi.io.awid    = top->io_master_awid;
+    axi.io.awlen   = top->io_master_awlen;
+    axi.io.awsize  = top->io_master_awsize;
+    axi.io.awburst = top->io_master_awburst;
+    // w
+    axi.io.wvalid  = top->io_master_wvalid;
+    axi.io.wdata   = top->io_master_wdata;
+    axi.io.wstrb   = top->io_master_wstrb;
+    axi.io.wlast   = top->io_master_wlast;
+    // b
+    axi.io.bready  = top->io_master_bready;
+    // ar
+    axi.io.arvalid = top->io_master_arvalid;
+    axi.io.araddr  = top->io_master_araddr - 0x80000000;
+    axi.io.arid    = top->io_master_arid;
+    axi.io.arlen   = top->io_master_arlen;
+    axi.io.arsize  = top->io_master_arsize;
+    axi.io.arburst = top->io_master_arburst;
+    // r
+    axi.io.rready  = top->io_master_rready;
+}
 
 /***********************************************************/
 void init_disasm(const char *triple);
@@ -144,6 +188,10 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     // axi4_ref<64,64,4> axi_ref(axi);
 
     // uint64_t s = axi_load_program<64,64,4> (img_file, mem);
+    
+    axi4<64,64,4> axi(0x8000000);
+    axi.load_img(img_file);
+
 
 
     setbuf(stdout, NULL);
@@ -167,7 +215,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     uint64_t pc = 0;
     uint64_t pre_pc = 0;
     // 
-    while (sdb_state == SDB_RUNNING && sim_time <= 100) { 
+    while (sdb_state == SDB_RUNNING) { 
         // device
         device_update(&sdb_state);
         // clock and reset
@@ -182,8 +230,16 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         //     printf("---------------\n");
         //     top->eval();
         // }
+        if(sim_time % 2 == 1){
+            cpu_to_axi(top, axi);
+            axi.beat();
+            axi_to_cpu(top, axi);
+            // dump_axi_read(axi_ref);
+            // printf("---------------\n");
+            top->eval();
+        }
         // trace
-        #ifdef TRACE_WAVE                      
+        #ifdef TRACE_WAVE           
         tfp->dump(contextp->time());
         #endif
         // SDL quit
