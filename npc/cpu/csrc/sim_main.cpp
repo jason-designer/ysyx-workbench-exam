@@ -19,75 +19,75 @@
 
 #define SIM_RESET_TIME 2
 /************************************************/
-#include "./axi4/axi.h"
-#include "./axi4/my_axi4.hpp"
-#include <iostream>
+#include "axi4.hpp"
+// #include "./axi4/axi.h"
+// #include <iostream>
 
-using std::cout;
-using std::endl;
+// using std::cout;
+// using std::endl;
 
-void dump_axi_read(axi4_ref<64,64,4> &axi) {
-    cout << "arid\t" << (unsigned long)axi.arid << endl;
-    // cout << "araddr\t" << (unsigned long)axi.araddr << endl;
-    printf("araddr\t%016lx\n",axi.araddr);
-    cout << "arlen\t" << (unsigned long)axi.arlen << endl;
-    cout << "arsize\t" << (unsigned long)axi.arsize << endl;
-    cout << "arburst\t" << (unsigned long)axi.arburst << endl;
-    cout << "arvalid\t" << (unsigned long)axi.arvalid << endl;
-    cout << "arready\t" << (unsigned long)axi.arready << endl;
-    cout << "rid\t" << (unsigned long)axi.rid << endl;
-    // cout << "rdata\t" << (unsigned long)axi.rdata << endl;
-    printf("rdata\t%016lx\n",axi.rdata);
-    cout << "rresp\t" << (unsigned long)axi.rresp << endl;
-    cout << "rlast\t" << (unsigned long)axi.rlast << endl;
-    cout << "rvalid\t" << (unsigned long)axi.rvalid << endl;
-    cout << "rready\t" << (unsigned long)axi.rready << endl;
-}
+// void dump_axi_read(axi4_ref<64,64,4> &axi) {
+//     cout << "arid\t" << (unsigned long)axi.arid << endl;
+//     // cout << "araddr\t" << (unsigned long)axi.araddr << endl;
+//     printf("araddr\t%016lx\n",axi.araddr);
+//     cout << "arlen\t" << (unsigned long)axi.arlen << endl;
+//     cout << "arsize\t" << (unsigned long)axi.arsize << endl;
+//     cout << "arburst\t" << (unsigned long)axi.arburst << endl;
+//     cout << "arvalid\t" << (unsigned long)axi.arvalid << endl;
+//     cout << "arready\t" << (unsigned long)axi.arready << endl;
+//     cout << "rid\t" << (unsigned long)axi.rid << endl;
+//     // cout << "rdata\t" << (unsigned long)axi.rdata << endl;
+//     printf("rdata\t%016lx\n",axi.rdata);
+//     cout << "rresp\t" << (unsigned long)axi.rresp << endl;
+//     cout << "rlast\t" << (unsigned long)axi.rlast << endl;
+//     cout << "rvalid\t" << (unsigned long)axi.rvalid << endl;
+//     cout << "rready\t" << (unsigned long)axi.rready << endl;
+// }
 
-void axi_to_cpu(VSimTop* top, axi4_ref<64,64,4>& axi_ref){
-    // aw
-    top->io_master_awready  = axi_ref.awready;
-    // w
-    top->io_master_wready   = axi_ref.wready;
-    // b
-    top->io_master_bvalid   = axi_ref.bvalid;
-    top->io_master_bresp    = axi_ref.bresp;
-    top->io_master_bid      = axi_ref.bid;
-    // ar
-    top->io_master_arready  = axi_ref.arready;
-    // r
-    top->io_master_rvalid   = axi_ref.rvalid;
-    top->io_master_rresp    = axi_ref.rresp;
-    top->io_master_rdata    = axi_ref.rdata;
-    top->io_master_rlast    = axi_ref.rlast;
-    top->io_master_rid      = axi_ref.rid;
-}
+// void axi_to_cpu(VSimTop* top, axi4_ref<64,64,4>& axi_ref){
+//     // aw
+//     top->io_master_awready  = axi_ref.awready;
+//     // w
+//     top->io_master_wready   = axi_ref.wready;
+//     // b
+//     top->io_master_bvalid   = axi_ref.bvalid;
+//     top->io_master_bresp    = axi_ref.bresp;
+//     top->io_master_bid      = axi_ref.bid;
+//     // ar
+//     top->io_master_arready  = axi_ref.arready;
+//     // r
+//     top->io_master_rvalid   = axi_ref.rvalid;
+//     top->io_master_rresp    = axi_ref.rresp;
+//     top->io_master_rdata    = axi_ref.rdata;
+//     top->io_master_rlast    = axi_ref.rlast;
+//     top->io_master_rid      = axi_ref.rid;
+// }
 
-void cpu_to_axi(VSimTop* top, axi4_ref<64,64,4>& axi_ref){
-    // aw
-    axi_ref.awvalid = top->io_master_awvalid;
-    axi_ref.awaddr  = top->io_master_awaddr - 0x80000000;
-    axi_ref.awid    = top->io_master_awid;
-    axi_ref.awlen   = top->io_master_awlen;
-    axi_ref.awsize  = top->io_master_awsize;
-    axi_ref.awburst = top->io_master_awburst;
-    // w
-    axi_ref.wvalid  = top->io_master_wvalid;
-    axi_ref.wdata   = top->io_master_wdata;
-    axi_ref.wstrb   = top->io_master_wstrb;
-    axi_ref.wlast   = top->io_master_wlast;
-    // b
-    axi_ref.bready  = top->io_master_bready;
-    // ar
-    axi_ref.arvalid = top->io_master_arvalid;
-    axi_ref.araddr  = top->io_master_araddr - 0x80000000;
-    axi_ref.arid    = top->io_master_arid;
-    axi_ref.arlen   = top->io_master_arlen;
-    axi_ref.arsize  = top->io_master_arsize;
-    axi_ref.arburst = top->io_master_arburst;
-    // r
-    axi_ref.rready  = top->io_master_rready;
-}
+// void cpu_to_axi(VSimTop* top, axi4_ref<64,64,4>& axi_ref){
+//     // aw
+//     axi_ref.awvalid = top->io_master_awvalid;
+//     axi_ref.awaddr  = top->io_master_awaddr - 0x80000000;
+//     axi_ref.awid    = top->io_master_awid;
+//     axi_ref.awlen   = top->io_master_awlen;
+//     axi_ref.awsize  = top->io_master_awsize;
+//     axi_ref.awburst = top->io_master_awburst;
+//     // w
+//     axi_ref.wvalid  = top->io_master_wvalid;
+//     axi_ref.wdata   = top->io_master_wdata;
+//     axi_ref.wstrb   = top->io_master_wstrb;
+//     axi_ref.wlast   = top->io_master_wlast;
+//     // b
+//     axi_ref.bready  = top->io_master_bready;
+//     // ar
+//     axi_ref.arvalid = top->io_master_arvalid;
+//     axi_ref.araddr  = top->io_master_araddr - 0x80000000;
+//     axi_ref.arid    = top->io_master_arid;
+//     axi_ref.arlen   = top->io_master_arlen;
+//     axi_ref.arsize  = top->io_master_arsize;
+//     axi_ref.arburst = top->io_master_arburst;
+//     // r
+//     axi_ref.rready  = top->io_master_rready;
+// }
 
 
 /***********************************************************/
@@ -139,11 +139,11 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     top->trace(tfp, 99);                            // Trace 99 levels of hierarchy,1 level means only trace top level signals
     tfp->open(tfp_file);                            // set the path of the vcd file, you need to mkdir before running it
     /****************************************************************************/
-    axi4_mem<64,64,4> mem(0x8000000);
-    axi4<64,64,4> axi;
-    axi4_ref<64,64,4> axi_ref(axi);
+    // axi4_mem<64,64,4> mem(0x8000000);
+    // axi4<64,64,4> axi;
+    // axi4_ref<64,64,4> axi_ref(axi);
 
-    uint64_t s = axi_load_program<64,64,4> (img_file, mem);
+    // uint64_t s = axi_load_program<64,64,4> (img_file, mem);
 
 
     setbuf(stdout, NULL);
@@ -174,14 +174,14 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
         top->reset = sim_time < SIM_RESET_TIME ? 1 : 0;
         top->clock = sim_time % 2;                                                          
         top->eval();   
-        if(sim_time % 2 == 1){
-            cpu_to_axi(top, axi_ref);
-            mem.beat(axi_ref);
-            axi_to_cpu(top, axi_ref);
-            dump_axi_read(axi_ref);
-            printf("---------------\n");
-            top->eval();
-        }
+        // if(sim_time % 2 == 1){
+        //     cpu_to_axi(top, axi_ref);
+        //     mem.beat(axi_ref);
+        //     axi_to_cpu(top, axi_ref);
+        //     dump_axi_read(axi_ref);
+        //     printf("---------------\n");
+        //     top->eval();
+        // }
         // trace
         #ifdef TRACE_WAVE                      
         tfp->dump(contextp->time());
