@@ -34,7 +34,7 @@ checkformat:
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: test verilog help compile bsp reformat checkformat clean
+
 
 # img_file
 ALL3_TEST_FILE = $(shell find $(NPC_HOME)/bin/non-output/riscv-tests/ -name "*-riscv-tests.bin")
@@ -70,7 +70,6 @@ ifeq ($(ALL),nanos)
 IMG_FILE = $(NPC_HOME)/bin/nanos_lite/nanos-lite-riscv64-npc.bin
 endif
 
-
 endif
 
 
@@ -78,6 +77,8 @@ endif
 # VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v")
 CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
+CFLAGS += -g 
+# CFLAGS += -O0
 CFLAGS += -lasan
 CFLAGS += $(shell llvm-config --cxxflags)
 
@@ -88,7 +89,7 @@ LDFLAGS += $(shell llvm-config --libs)
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	echo $(VSRCS)
-	verilator -Wall --cc --exe --build --trace      \
+	verilator -Wall --cc --exe --build --trace 		\
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
 	-Wno-LATCH -Wno-UNOPTFLAT                    	\
@@ -106,10 +107,13 @@ sim:
     $(CSRC_DIR)/sim_main.cpp                        \
     $(VSRC_DIR)/SimTop.v 
 
-
+run: sim
 	mkdir -p $(WAVEFORM_DIR)
 	$(VERILATOR_DIR)/VSimTop  $(WAVEFORM_DIR)/sim_main.vcd  $(IMG_FILE)
-	
+
+gdb: sim
+	mkdir -p $(WAVEFORM_DIR)
+	gdb -tui --args $(VERILATOR_DIR)/VSimTop  $(WAVEFORM_DIR)/sim_main.vcd  $(IMG_FILE)
 
 wave:
 	gtkwave $(WAVEFORM_DIR)/sim_main.vcd
@@ -159,4 +163,6 @@ update_nanos_lite:
 	cp ../nanos-lite/build/nanos-lite-riscv64-npc.elf bin/nanos_lite/
 	cp ../nanos-lite/build/nanos-lite-riscv64-npc.txt bin/nanos_lite/
 
+
+.PHONY: test verilog help compile bsp reformat checkformat clean sim run gdb wave update_am_test update_nanos_lite
 include ../Makefile

@@ -13,12 +13,34 @@
 /***************** sdb config *******************/ 
 #define DIFFTEST
 // #define TRACE_WAVE
-#define ITRACE
+// #define ITRACE
 // #define MTRACE 
 #define DTRACE
 
 #define SIM_RESET_TIME 2
 /************************************************/
+#include "./axi4/axi.h"
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+void dump_axi_read(axi4_ref<64,64,4> &axi) {
+    cout << "arid\t" << (unsigned long)axi.arid << endl;
+    cout << "araddr\t" << (unsigned long)axi.araddr << endl;
+    cout << "arlen\t" << (unsigned long)axi.arlen << endl;
+    cout << "arsize\t" << (unsigned long)axi.arsize << endl;
+    cout << "arburst\t" << (unsigned long)axi.arburst << endl;
+    cout << "arvalid\t" << (unsigned long)axi.arvalid << endl;
+    cout << "arready\t" << (unsigned long)axi.arready << endl;
+    cout << "rid\t" << (unsigned long)axi.rid << endl;
+    cout << "rdata\t" << (unsigned long)axi.rdata << endl;
+    cout << "rresp\t" << (unsigned long)axi.rresp << endl;
+    cout << "rlast\t" << (unsigned long)axi.rlast << endl;
+    cout << "rvalid\t" << (unsigned long)axi.rvalid << endl;
+    cout << "rready\t" << (unsigned long)axi.rready << endl;
+}
+/***********************************************************/
 void init_disasm(const char *triple);
 void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 
@@ -26,7 +48,6 @@ void init_sdb(){
     init_disasm("riscv64-pc-linux-gnu");
     iringbuf_init();
 }
-
 
 uint64_t get_sys_time_us(){
     struct timeval tv;
@@ -68,6 +89,43 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     top->trace(tfp, 99);                            // Trace 99 levels of hierarchy,1 level means only trace top level signals
     tfp->open(tfp_file);                            // set the path of the vcd file, you need to mkdir before running it
     /****************************************************************************/
+    axi4_mem<64,64,4> mem(0x8000000);
+    axi4<64,64,4> axi;
+    axi4_ref<64,64,4> axi_ref(axi);
+
+    uint64_t s = axi_load_program<64,64,4> (img_file, mem);
+    
+    // uint64_t in = 0x1122334455667788;
+    // mem.write(0,8,(uint8_t*)&in);
+
+    // uint64_t inst;
+    // mem.read(0,8,(uint8_t*)&inst);
+    // printf("------inst=%lx\n",inst);
+
+    // axi_ref.arid = 0xa;
+    // axi_ref.araddr = 0;
+    // axi_ref.arlen = 1;
+    // axi_ref.arsize = 3;
+    // axi_ref.arburst = BURST_INCR;
+    // axi_ref.arvalid = 1;
+    // axi_ref.rready = 1;
+    // mem.beat(axi_ref); // reset
+    // for (int i=0;i<10;i++) {
+    //     mem.beat(axi_ref);
+    //     dump_axi_read(axi_ref);
+    //     printf("->%016lx\n",axi.rdata);
+    //     printf("----------\n");
+
+    // }
+    // return 0;
+
+
+
+
+
+
+
+
     setbuf(stdout, NULL);
     uint64_t size = load_program(img_file);
     device_init();
@@ -193,7 +251,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     tfp->close();
     delete top;
     delete contextp;
-
+ 
     //pack up end info 
     Sdb_end_info *res = (Sdb_end_info*)malloc(sizeof(Sdb_end_info));
     res->program_name = get_program_name(img_file);

@@ -26,6 +26,9 @@ class SimTop extends Module{
 
 }
 
+
+
+
 // class SimTop extends Module{
 //   val io = IO(new Bundle {
 //     val logCtrl   = new LogCtrlIO

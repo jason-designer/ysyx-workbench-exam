@@ -119,6 +119,10 @@ class Core extends Module{
 }
 
 
+
+
+
+
 // class Core extends Module{
 //     val io = IO(new Bundle{
 //         val axi = new AxiIO
