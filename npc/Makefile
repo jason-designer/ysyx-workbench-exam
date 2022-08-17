@@ -32,7 +32,8 @@ checkformat:
 	mill -i __.checkFormat
 
 clean:
-	-rm -rf $(BUILD_DIR)
+#	-rm -rf $(BUILD_DIR)
+	-rm -rf $(BUILD_DIR)/verilator_obj
 
 
 
@@ -78,7 +79,7 @@ endif
 CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v" -not -name "SimTop.v")
 
-CFLAGS += -g 
+CFLAGS += -g -O0
 # CFLAGS += -O0
 CFLAGS += -lasan
 CFLAGS += $(shell llvm-config --cxxflags)
@@ -96,15 +97,15 @@ LDFLAGS += $(shell llvm-config --libs)
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	echo $(VSRCS)
 	verilator -Wall --cc --exe --build --trace 		\
     -Wno-DECLFILENAME -Wno-UNUSED  -Wno-EOFNEWLINE  \
 	-Wno-WIDTH -Wno-BLKSEQ -Wno-VARHIDDEN           \
 	-Wno-LATCH -Wno-UNOPTFLAT                    	\
 	-I $(VSRCS)                                     \
 	-I $(CSRCS)                                     \
-	$(addprefix -CFLAGS , $(CFLAGS)) 				\
+	$(addprefix -CFLAGS , -O0 $(CFLAGS)) 			\
 	$(addprefix -LDFLAGS , $(LDFLAGS)) 				\
+	-O0 \
     --top-module SimTop                             \
     --Mdir $(VERILATOR_DIR)                         \
     $(CSRC_DIR)/sim_main.cpp                        \

@@ -2,6 +2,7 @@
 #define __AXI4_H__
 
 #include"common.h"
+#include<math.h>
 
 template <unsigned int A_WIDTH = 64, unsigned int D_WIDTH = 64, unsigned int ID_WIDTH = 4>
 struct axi4_io {
@@ -47,7 +48,6 @@ enum axi_resp_type {
     RESP_SLVERR = 2,
     RESP_DECERR = 3
 };
-
 enum axi_burst_type {
     BURST_FIXED = 0,
     BURST_INCR  = 1,
@@ -76,7 +76,29 @@ enum read_state{
     R_FETCH = 2
 };
 
+struct write_info{
+    // write info 
+    uint8_t     id;
+    uint64_t    addr;
+    uint8_t     burst;
+    uint64_t    size;   // convert to real size, not 0,1,2,3...
+    uint8_t     len;
+    // 
+    uint64_t    delay;
+    uint8_t     state;
+    // burst flag
+    uint64_t    cur_addr;
+    uint64_t    cur_times;
+};
+enum write_state{
+    W_IDLE = 0,
+    W_WRITE = 1,
+    W_DELAY = 2,
+    W_RESP = 3
+};
+
 // 暂时只支持64,64,4
+// write_channel不支持resp，resp一直返回正确
 template <unsigned int A_WIDTH = 64, unsigned int D_WIDTH = 64, unsigned int ID_WIDTH = 4>
 class axi4 {
 private:
@@ -90,6 +112,21 @@ public:
         mem_size = size;
         delay = delay_input;
         assert(A_WIDTH == 64 && D_WIDTH == 64 && ID_WIDTH == 4);
+        // init output
+        io.awready = false;
+        io.wready = false;
+        io.bvalid = false;
+        io.bresp = 0;
+        io.bid = 0;
+        io.arready = false;
+        io.rvalid = false;
+        io.rresp = 0;
+        io.rdata = 0;
+        io.rlast = false;
+        io.rid = 0;
+        // init state
+        r.state = R_IDLE;
+        w.state = W_IDLE;
     }
     ~axi4() {
         free(mem);
@@ -127,32 +164,58 @@ public:
     }
 private:
     read_info r;
+    write_info w;
     // 返回的数据要字节对齐
+    uint64_t strb_8_to_64(uint8_t strb){
+        uint64_t mask = 0;
+        int i;
+        for(i = 0; i < 8; i++){
+            if((strb >> i) & 0x01) mask |= 0xff << (i * 8);
+        }
+        return mask;
+    }
     axi_resp_type do_read(uint64_t addr, uint64_t size, uint8_t* buffer){
         assert(A_WIDTH == 64 && D_WIDTH == 64 && ID_WIDTH == 4);
+        assert(size <= 8);
         if (addr + size <= mem_size) {
             memcpy(buffer, &mem[addr], size);
+            // rounding addr accounding to D_WIDTH
+            uint64_t data = *(uint64_t*)buffer;
+            *(uint64_t*)buffer = data << ((addr % 8) << 3);
             return RESP_OKEY;
         }
         else return RESP_DECERR;
     }
-    axi_resp_type do_write(uint64_t addr, uint64_t size, uint8_t* buffer){
+    // axi_resp_type do_write(uint64_t addr, uint64_t size, uint8_t* buffer){
+    //     if (addr + size <= mem_size) {
+    //         memcpy(&mem[addr], buffer, size);
+    //         return RESP_OKEY;
+    //     }
+    //     else return RESP_DECERR;
+    // }
+    void do_write(uint64_t addr, uint64_t size, uint64_t data, uint8_t strb){
+        assert(A_WIDTH == 64 && D_WIDTH == 64 && ID_WIDTH == 4);
+        assert(size <= 8);
+        assert((addr + size) <= ((addr & ~0x7) + 8));
         if (addr + size <= mem_size) {
-            memcpy(&mem[addr], buffer, size);
-            return RESP_OKEY;
+            uint64_t rounding_addr = addr & ~0x7;
+            uint64_t mask = strb_8_to_64(strb);
+            uint64_t buffer;
+            memcpy((uint8_t*)&buffer, &mem[rounding_addr], 8);
+            buffer = (buffer & (~mask)) | (data & mask);
+            memcpy(&mem[rounding_addr], (uint8_t*)&buffer, 8);
         }
-        else return RESP_DECERR;
+        // assert(0);
     }
-    void write_channel(){}
     void read_channel(){
-        io.arready = false;
-        io.rid = 0;
-        io.rdata = 0;
-        io.rresp = 0;
-        io.rlast = false;
-        io.rvalid = false;
         switch(r.state){
             case R_IDLE:    
+                            io.arready = false;
+                            io.rid = 0;
+                            io.rdata = 0;
+                            io.rresp = 0;
+                            io.rlast = false;
+                            io.rvalid = false;
                             if(io.arvalid == true){
                                 r.state = R_DELAY;
                                 // output
@@ -163,11 +226,17 @@ private:
                                 r.id    = io.arid;
                                 r.addr  = io.araddr;
                                 r.burst = io.arburst;
-                                r.size  = 2 ^ io.arsize;
+                                r.size  = pow(2, io.arsize);
                                 r.len   = io.arlen;
                             }
                             break;
             case R_DELAY:
+                            io.arready = false;
+                            io.rid = 0;
+                            io.rdata = 0;
+                            io.rresp = 0;
+                            io.rlast = false;
+                            io.rvalid = false;
                             if(r.delay == 0){
                                 r.state = R_FETCH;
                                 // init do read
@@ -179,9 +248,9 @@ private:
                             r.delay--;
                             break;
             case R_FETCH:
+                            io.arready = false;
                             io.rvalid   = true;
                             io.rid      = r.id;
-                        
                             io.rlast    = r.len == r.cur_times;
                             // make sure only read once every transfer
                             if(r.need_to_read){
@@ -212,9 +281,78 @@ private:
                                 r.cur_times++;
                                 r.need_to_read = true;
                             }
+                            break;
         }
     }
-
+    void write_channel(){
+        switch(w.state){
+            case W_IDLE:
+                            io.awready  = false;
+                            io.wready   = false;
+                            io.bid      = 0;
+                            io.bresp    = 0;
+                            io.bvalid   = false;
+                            if(io.awvalid == true){
+                                w.state = W_WRITE;
+                                // output
+                                io.awready = true;
+                                // markdown write info
+                                w.id    = io.awid;
+                                w.addr  = io.awaddr;
+                                w.burst = io.awburst;
+                                w.size  = pow(2, io.awsize);
+                                w.len   = io.awlen;
+                                // init do write
+                                w.cur_addr  = w.addr;
+                                w.cur_times = 0;
+                            }
+                            break;
+            case W_WRITE:   
+                            io.awready  = false;
+                            io.wready   = true;
+                            io.bid      = 0;
+                            io.bresp    = 0;
+                            io.bvalid   = false;
+                            if(io.wvalid == true){
+                                assert(w.cur_times <= w.len);
+                                do_write(w.cur_addr, w.size, io.wdata, io.wstrb);
+                                // update cur_addr and cur_times
+                                w.cur_times++;
+                                switch(w.burst){
+                                    case BURST_FIXED:   break;
+                                    case BURST_INCR:    w.cur_addr += w.size; break;
+                                    default: assert(0);
+                                }
+                            }
+                            if(io.wvalid && io.wlast){
+                                w.state = W_DELAY;
+                                w.delay = delay;
+                            }
+                            break;
+            case W_DELAY:
+                            io.awready  = false;
+                            io.wready   = false;
+                            io.bid      = 0;
+                            io.bresp    = 0;
+                            io.bvalid   = false;
+                            if(w.delay == 0){
+                                w.state = W_RESP;
+                                break;
+                            }
+                            w.delay--;
+                            break;
+            case W_RESP:
+                            io.awready  = false;
+                            io.wready   = false;
+                            io.bid      = w.id;
+                            io.bresp    = RESP_OKEY;
+                            io.bvalid   = true;
+                            if(io.bready == true){
+                                w.state = W_IDLE;
+                            }
+                            break;
+        }
+    }
 
 
 };

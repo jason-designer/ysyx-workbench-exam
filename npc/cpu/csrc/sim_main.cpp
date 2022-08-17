@@ -13,8 +13,8 @@
 /***************** sdb config *******************/ 
 #define DIFFTEST
 #define TRACE_WAVE
-// #define ITRACE
-// #define MTRACE 
+#define ITRACE
+#define MTRACE 
 #define DTRACE
 
 #define SIM_RESET_TIME 2
@@ -234,8 +234,15 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
             cpu_to_axi(top, axi);
             axi.beat();
             axi_to_cpu(top, axi);
-            // dump_axi_read(axi_ref);
-            // printf("---------------\n");
+            // // aw
+            // top->io_master_awready  = false;
+            // // w
+            // top->io_master_wready   = false;
+            // // b
+            // top->io_master_bvalid   = false;
+            // top->io_master_bresp    = 0;
+            // top->io_master_bid      = 0;
+            // //
             top->eval();
         }
         // trace
@@ -252,18 +259,22 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
             if(commit_info.commit){
                 char str[100];
                 uint32_t inst = commit_info.inst;
-                disassemble(str, 100, 0x80000000, (uint8_t*)&inst, 4);
+                uint32_t pc = commit_info.pc;
+                disassemble(str, 100, pc, (uint8_t*)&inst, 4);
                 // printf("pc = %lx : %08x : %s\n", commit_info.pc, commit_info.inst, str);
                 char buf[100];
-                sprintf(buf, "pc = %lx : %08x : %s", commit_info.pc, commit_info.inst, str);
+                sprintf(buf, "time = %ld pc = %lx : %08x : %s", sim_time, commit_info.pc, commit_info.inst, str);
                 iringbuf_log_once(buf);
             }
             #endif
             // mtrace
             #ifdef MTRACE 
             if(dmem_info.valid == 1 && (dmem_info.ren == 1 || dmem_info.wen == 1)){
-                void dmem_trace();
-                dmem_trace();
+                // void dmem_trace();
+                // dmem_trace();
+                Dmem_Info& d = dmem_info;
+                printf("%d %d %llx %08lx %d %016lx %016lx %d %lx %016lx %x\n",sim_time,d.valid, d.pc, d.inst, d.ren, d.raddr, d.rdata, d.wen, d.waddr, d.wdata, d.wmask);
+
             }
             #endif
 
@@ -329,7 +340,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
 
     /***********************************************************************/
     #ifdef ITRACE
-    iringbuf_print();
+    if(sdb_state != SDB_HIT_GOOD_TRAP) iringbuf_print();
     #endif
     /***********************************************************************/
     tfp->close();

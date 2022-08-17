@@ -4,9 +4,9 @@ import chisel3.util.experimental._
 import scala.math._
 
 trait CacheParameters {
-    val OffsetWidth     = 6     // 这个大于3，因为dcache写入的最低单位是64位。
+    val OffsetWidth     = 4     // 这个大于3，因为dcache写入的最低单位是64位。
                                 // 因为后面的axi的transfer大小设为了4Byte（这个条件要求它>=2）
-    val IndexWidth      = 5
+    val IndexWidth      = 1
     val TagWidth        = 64 - OffsetWidth - IndexWidth // 三个数之和为64
 
     val CacheWay        = 2

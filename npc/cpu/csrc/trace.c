@@ -28,7 +28,7 @@ void dmem_info_fetch( unsigned char valid, long long pc, int inst, unsigned char
 
 void dmem_trace(){
     Dmem_Info& d = dmem_info;
-    printf("%d %llx %08lx %d %llx %llx %d %llx %llx %x\n",d.valid, d.pc, d.inst, d.ren, d.raddr, d.rdata, d.wen, d.waddr, d.wdata, d.wmask);
+    printf("%d %llx %08lx %d %016llx %016llx %d %016llx %016llx %02x\n",d.valid, d.pc, d.inst, d.ren, d.raddr, d.rdata, d.wen, d.waddr, d.wdata, d.wmask);
 }
 
 

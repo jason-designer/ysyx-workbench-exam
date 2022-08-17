@@ -276,16 +276,29 @@ class Core extends Module{
     val mtrace = Module(new MTrace)
     mtrace.io.clk   := clock
     mtrace.io.reset := reset
-    mtrace.io.valid := pipeline.io.mem_valid
-    mtrace.io.pc    := pipeline.io.mem_pc
-    mtrace.io.inst  := pipeline.io.mem_inst
-    mtrace.io.ren   := pipeline.io.dmem.ren
-    mtrace.io.raddr := pipeline.io.dmem.raddr
-    mtrace.io.rdata := pipeline.io.dmem.rdata
-    mtrace.io.wen   := pipeline.io.dmem.wen
-    mtrace.io.waddr := pipeline.io.dmem.waddr
-    mtrace.io.wdata := pipeline.io.dmem.wdata
-    mtrace.io.wmask := pipeline.io.dmem.wmask
+    mtrace.io.valid := commit
+    mtrace.io.pc    := pc
+    mtrace.io.inst  := inst
+    mtrace.io.ren   := pipeline.io.commit_dmem_ren
+    mtrace.io.raddr := pipeline.io.commit_dmem_raddr
+    mtrace.io.rdata := pipeline.io.commit_dmem_rdata
+    mtrace.io.wen   := pipeline.io.commit_dmem_wen
+    mtrace.io.waddr := pipeline.io.commit_dmem_waddr
+    mtrace.io.wdata := pipeline.io.commit_dmem_wdata
+    mtrace.io.wmask := pipeline.io.commit_dmem_wmask
+    // val mtrace = Module(new MTrace)
+    // mtrace.io.clk   := clock
+    // mtrace.io.reset := reset
+    // mtrace.io.valid := pipeline.io.mem_valid
+    // mtrace.io.pc    := pipeline.io.mem_pc
+    // mtrace.io.inst  := pipeline.io.mem_inst
+    // mtrace.io.ren   := pipeline.io.dmem.ren
+    // mtrace.io.raddr := pipeline.io.dmem.raddr
+    // mtrace.io.rdata := pipeline.io.dmem.rdata
+    // mtrace.io.wen   := pipeline.io.dmem.wen
+    // mtrace.io.waddr := pipeline.io.dmem.waddr
+    // mtrace.io.wdata := pipeline.io.dmem.wdata
+    // mtrace.io.wmask := pipeline.io.dmem.wmask
 }
 
 
