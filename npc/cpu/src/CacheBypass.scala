@@ -100,10 +100,10 @@ class DCacheBypass extends Module{
     rdata := Mux(state === update, io.axi.rdata, rdata)
     // axi r output signal
     io.axi.req      := state === fetch_data
-    io.axi.raddr    := addr & "hffffffff".U << transfer   // 若tranfer的size为4的话，地址要求4对齐
+    io.axi.raddr    := addr & "hffffffff".U << transfer   // 若transfer的size为4的话，地址要求4对齐
     // axi w output signal
     io.axi.weq      := state === write_data
-    io.axi.waddr    := addr & "hffffffff".U << transfer     // 若tranfer的size为4的话，地址要求4对齐
+    io.axi.waddr    := addr & "hffffffff".U << transfer     // 若transfer的size为4的话，地址要求4对齐
     io.axi.wdata    := wdata
     io.axi.wmask    := wmask  
     // axi transfer

@@ -3,6 +3,7 @@
 
 #include"common.h"
 #include<math.h>
+#include"device.h"
 
 template <unsigned int A_WIDTH = 64, unsigned int D_WIDTH = 64, unsigned int ID_WIDTH = 4>
 struct axi4_io {
@@ -174,38 +175,43 @@ private:
         }
         return mask;
     }
-    axi_resp_type do_read(uint64_t addr, uint64_t size, uint8_t* buffer){
+    axi_resp_type do_read(uint64_t addr, uint64_t size, uint64_t* data){
         assert(A_WIDTH == 64 && D_WIDTH == 64 && ID_WIDTH == 4);
         assert(size <= 8);
-        if (addr + size <= mem_size) {
-            memcpy(buffer, &mem[addr], size);
-            // rounding addr accounding to D_WIDTH
-            uint64_t data = *(uint64_t*)buffer;
-            *(uint64_t*)buffer = data << ((addr % 8) << 3);
+        assert((addr + size) <= ((addr & ~0x7) + 8));
+
+        if((addr + RESET_VECTOR) >= DEVICE_BASE) {
+            mmio_read_device(addr + RESET_VECTOR, (long long*)data);
             return RESP_OKEY;
         }
-        else return RESP_DECERR;
+        if(addr + size <= mem_size) {
+            uint64_t rounding_addr = addr & ~0x7;
+            memcpy((uint8_t*)data, &mem[rounding_addr], 8);
+            // rounding data accounding to D_WIDTH
+            *data = *data << ((addr % 8) << 3);
+            return RESP_OKEY;
+        }
+        return RESP_DECERR;
     }
-    // axi_resp_type do_write(uint64_t addr, uint64_t size, uint8_t* buffer){
-    //     if (addr + size <= mem_size) {
-    //         memcpy(&mem[addr], buffer, size);
-    //         return RESP_OKEY;
-    //     }
-    //     else return RESP_DECERR;
-    // }
     void do_write(uint64_t addr, uint64_t size, uint64_t data, uint8_t strb){
         assert(A_WIDTH == 64 && D_WIDTH == 64 && ID_WIDTH == 4);
         assert(size <= 8);
         assert((addr + size) <= ((addr & ~0x7) + 8));
-        if (addr + size <= mem_size) {
+
+        if((addr + RESET_VECTOR) >= DEVICE_BASE) {
+            mmio_write_device(addr + RESET_VECTOR, data, strb);
+            return;
+        }
+        if(addr + size <= mem_size) {
             uint64_t rounding_addr = addr & ~0x7;
             uint64_t mask = strb_8_to_64(strb);
             uint64_t buffer;
             memcpy((uint8_t*)&buffer, &mem[rounding_addr], 8);
             buffer = (buffer & (~mask)) | (data & mask);
             memcpy(&mem[rounding_addr], (uint8_t*)&buffer, 8);
+            return;
         }
-        // assert(0);
+        assert(0);
     }
     void read_channel(){
         switch(r.state){
@@ -254,7 +260,7 @@ private:
                             io.rlast    = r.len == r.cur_times;
                             // make sure only read once every transfer
                             if(r.need_to_read){
-                                io.rresp    = do_read(r.cur_addr, r.size, (uint8_t*)&io.rdata);
+                                io.rresp    = do_read(r.cur_addr, r.size, (uint64_t*)&io.rdata);
                                 r.need_to_read = false;
                             }
                             // fetch done
