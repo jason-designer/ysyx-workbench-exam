@@ -1,6 +1,8 @@
 LD = $(CXX)
 
 ### Run an application with $(ISA)=native
+CFLAGS += -g
+
 
 env:
 	$(MAKE) -C $(NAVY_HOME)/libs/libos ISA=native
