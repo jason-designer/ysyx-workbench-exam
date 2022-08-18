@@ -273,6 +273,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
 
 int main(int argc, char** argv, char** env) {
     // 初始化
+    bool fail = false;
     init_sdb();
     //
     int program_num = argc - 2;
@@ -300,10 +301,12 @@ int main(int argc, char** argv, char** env) {
         printf("%-30s: simtime=%6ld  ipc=%f clk/s=%6ld  ", info->program_name, info->sim_time, info->ipc, info->clock_per_sec);
         if(info->fail) Logc(ASNI_FG_RED, "FAIL");
         else Logc(ASNI_FG_GREEN, "PASS");
+        if(info->fail) fail = true;
         total_clock += info->clock_number;
         total_inst  += info->inst_number;
     }
     double ipc = (double)total_inst / (double)total_clock;
     printf("total program number:%d, fail:%d, IPC=%f\n", program_num, fail_num, ipc);
     printf("-----------------------------------------------------------------\n");
+    return fail;
 }

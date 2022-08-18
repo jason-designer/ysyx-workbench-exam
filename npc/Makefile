@@ -32,8 +32,7 @@ checkformat:
 	mill -i __.checkFormat
 
 clean:
-#	-rm -rf $(BUILD_DIR)
-	-rm -rf $(BUILD_DIR)/verilator_obj
+	-rm -rf $(BUILD_DIR)
 
 
 
