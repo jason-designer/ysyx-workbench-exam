@@ -1,10 +1,11 @@
-BUILD_DIR = $(NPC_HOME)/build
-CSRC_DIR = $(NPC_HOME)/cpu/csrc
-VERILATOR_DIR = $(BUILD_DIR)/verilator_obj
-VSRC_DIR = $(BUILD_DIR)/vsrc
-WAVEFORM_DIR = $(BUILD_DIR)/waveform
+BUILD_DIR 		= $(NPC_HOME)/build
+CSRC_DIR 		= $(NPC_HOME)/cpu/csrc
+VERILATOR_DIR	= $(BUILD_DIR)/verilator_obj
+VSRC_DIR 		= $(BUILD_DIR)/vsrc
+WAVEFORM_DIR 	= $(BUILD_DIR)/waveform
+DIFF_DIR		= $(NPC_HOME)/diff-so
 
-YSYX_DIR = $(NPC_HOME)/..
+YSYX_DIR 		= $(NPC_HOME)/..
 
 
 test:
@@ -78,7 +79,7 @@ endif
 CSRCS = $(shell find $(abspath $(CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.v" -not -name "SimTop.v")
 
-CFLAGS += -g -O0
+CFLAGS += -g
 # CFLAGS += -O0
 CFLAGS += -lasan
 CFLAGS += $(shell llvm-config --cxxflags)
@@ -87,12 +88,8 @@ LDFLAGS += -ldl
 LDFLAGS += -lSDL2 -lSDL2_image 
 LDFLAGS += $(shell llvm-config --libs)
 
-# -v $(VSRC_DIR)/RegFileBlackBox.v               	\
-# -v $(VSRC_DIR)/Halt.v                           \
-# -v $(VSRC_DIR)/ITrace.v							\
-# -v $(VSRC_DIR)/MTrace.v 						\
-# -v $(VSRC_DIR)/DMemory.v                        \
-# -v $(VSRC_DIR)/IMemory_asy.v              		\
+# DIFF_TEST = $(DIFF_DIR)/riscv64-nemu-interpreter-so
+DIFF_TEST = $(DIFF_DIR)/riscv64-spike-so
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
@@ -104,7 +101,6 @@ sim:
 	-I $(CSRCS)                                     \
 	$(addprefix -CFLAGS , -O0 $(CFLAGS)) 			\
 	$(addprefix -LDFLAGS , $(LDFLAGS)) 				\
-	-O0 \
     --top-module SimTop                             \
     --Mdir $(VERILATOR_DIR)                         \
     $(CSRC_DIR)/sim_main.cpp                        \
@@ -112,11 +108,11 @@ sim:
 
 run: sim
 	mkdir -p $(WAVEFORM_DIR)
-	$(VERILATOR_DIR)/VSimTop  $(WAVEFORM_DIR)/sim_main.vcd  $(IMG_FILE)
+	$(VERILATOR_DIR)/VSimTop  $(WAVEFORM_DIR)/sim_main.vcd $(DIFF_TEST) $(IMG_FILE)
 
 gdb: sim
 	mkdir -p $(WAVEFORM_DIR)
-	gdb -tui --args $(VERILATOR_DIR)/VSimTop  $(WAVEFORM_DIR)/sim_main.vcd  $(IMG_FILE)
+	gdb -tui --args $(VERILATOR_DIR)/VSimTop $(WAVEFORM_DIR)/sim_main.vcd $(DIFF_TEST) $(IMG_FILE)
 
 wave:
 	gtkwave $(WAVEFORM_DIR)/sim_main.vcd

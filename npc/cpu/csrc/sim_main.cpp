@@ -105,7 +105,7 @@ char* get_program_name(char* img_file){
     return name;
 }
 
-Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
+Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* diff_file, char* img_file){
     VerilatedContext* contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
     VSimTop* top = new VSimTop{contextp};           // top is the name of Module
@@ -115,17 +115,18 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* img_file){
     top->trace(tfp, 99);                            // Trace 99 levels of hierarchy,1 level means only trace top level signals
     tfp->open(tfp_file);                            // set the path of the vcd file, you need to mkdir before running it
     /****************************************************************************/
+    // init axi
     axi4<64,64,4> axi(0x8000000);
     axi.load_img(img_file);
-
-
+    // 
     setbuf(stdout, NULL);
     uint64_t size = load_program(img_file);
     device_init();
-
+    // 
     #ifdef DIFFTEST
-    init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
+    // init_difftest("/home/zgs/project/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so", size, DIFFTEST_PORT);
     // init_difftest("/home/zgs/project/ysyx-workbench/nemu/tools/spike-diff/build/riscv64-spike-so", size, DIFFTEST_PORT);
+    init_difftest(diff_file, size, DIFFTEST_PORT);
     #else
     commit_info.commit = 0;
     #endif
@@ -276,11 +277,13 @@ int main(int argc, char** argv, char** env) {
     bool fail = false;
     init_sdb();
     //
-    int program_num = argc - 2;
+    int program_num = argc - 3;
     char* tfp_file = argv[1];
+    char* diff_file = argv[2];
+    printf("---------------------%s\n%s\n%s\n",argv[0],argv[1],argv[2]);
     // 加载默认程序
     if(program_num == 0){
-        sim_main(argc, argv, tfp_file, NULL);
+        sim_main(argc, argv, tfp_file, diff_file, NULL);
     }
     // 回归测试
     Sdb_end_info *program_end_info[program_num];
@@ -289,9 +292,9 @@ int main(int argc, char** argv, char** env) {
     int fail_num = 0;
     // sim
     for(int i = 0; i < program_num; i++){
-        char* img_file = argv[i + 2];
+        char* img_file = argv[i + 3];
         Sdb_end_info *res;
-        program_end_info[i] = sim_main(argc, argv, tfp_file, img_file);
+        program_end_info[i] = sim_main(argc, argv, tfp_file, diff_file, img_file);
         fail_num += program_end_info[i]->fail;
     }
     // printf result
