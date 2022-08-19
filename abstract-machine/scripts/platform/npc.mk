@@ -1,9 +1,8 @@
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 
-verilog:
-	$(MAKE) -C $(NPC_HOME) IMG_FILE=$(IMAGE).bin verilog
+VERILOG = verilog
 
 run: image
-	$(MAKE) -C $(NPC_HOME) IMG_FILE=$(IMAGE).bin run
+	$(MAKE) -C $(NPC_HOME) IMG_FILE=$(IMAGE).bin $(VERILOG) run
 
-.PHONY: run
+.PHONY: run sim verilog
