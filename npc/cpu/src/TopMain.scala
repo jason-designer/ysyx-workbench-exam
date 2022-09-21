@@ -3,3 +3,4 @@ object TopMain extends App {
   chisel3.stage.ChiselGeneratorAnnotation(() => new SimTop())
   ))
 }
+
