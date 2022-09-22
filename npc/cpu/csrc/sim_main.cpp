@@ -12,8 +12,8 @@
 
 /***************** sdb config *******************/ 
 #define DIFFTEST
-// #define TRACE_WAVE
-// #define ITRACE
+#define TRACE_WAVE
+#define ITRACE
 // #define MTRACE 
 #define DTRACE
 

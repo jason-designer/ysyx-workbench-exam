@@ -158,7 +158,7 @@ class Core extends Module{
     pipeline.io.stall_wb    := dmem_not_ok
 
     // pipeline <--> regfile
-    rfu.io.rs1_addr         := pipeline.io.rs1_addr 
+    rfu.io.rs1_addr         := pipeline.io.rs1_addr
     rfu.io.rs2_addr         := pipeline.io.rs2_addr
     pipeline.io.rs1_data    := rfu.io.rs1_data
     pipeline.io.rs2_data    := rfu.io.rs2_data
