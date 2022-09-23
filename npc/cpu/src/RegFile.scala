@@ -36,7 +36,6 @@ class RegFileBlackBox extends BlackBox with HasBlackBoxInline{
         val rs2_data = Output(UInt(64.W))
         val rd_data  = Input(UInt(64.W))
     })
-
     setInline("RegFileBlackBox.v",
             """
            |import "DPI-C" function void set_gpr_ptr(input logic [63:0] a []);
