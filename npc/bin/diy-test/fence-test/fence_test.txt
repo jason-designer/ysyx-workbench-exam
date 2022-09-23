@@ -1,0 +1,11 @@
+sw指令把00000513（给a0赋值0）写道nop那个地方，若fence正确则会hit good trap
+  
+
+0	0x00100113		li sp, 1
+4	0x01f11113		slli sp,sp 31
+8	0x00100513		li a0, 1
+c	0x51300093		li ra, 0x00000513
+10	0x00112c23		sw ra, 24(sp)
+14	0x0000100f		fence
+18	0x00000013		nop
+1c	0x00100073		ebreak

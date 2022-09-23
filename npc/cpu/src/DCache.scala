@@ -210,13 +210,17 @@ class DCache extends Module with CacheParameters{
     val block2  = Module(new SRam_2k).io
     
     //state machine define
-    val idle :: getblock1 :: getblock2 :: writeback :: fetch :: update :: update_done :: Nil = Enum(7)
+    val idle :: getblock1 :: getblock2 :: writeback :: fetch :: update :: update_done :: fence_start :: getblock3 :: getblock4 :: fence_axi :: fence_axi_done :: Nil = Enum(12)
     val state = RegInit(idle)
     val miss  = Wire(Bool())
     val dirty = Wire(Bool())
+    val fence_reg = RegInit(0.U((1 + IndexWidth).W))    // 添加一位用于记录正在情况哪一路
+    val fence_way = fence_reg(IndexWidth)
+    val fence_cnt = fence_reg(IndexWidth - 1, 0)
 
     switch(state){
         is(idle){
+            when(io.fence.req){state := fence_start}
             when(miss && io.dmem.en){state := Mux(dirty, writeback, fetch)}
         }
         is(getblock1){
@@ -236,6 +240,23 @@ class DCache extends Module with CacheParameters{
         }
         is(update_done){
             state := idle
+        }
+        // fence
+        is(fence_start){
+            state := getblock3
+        }
+        is(getblock3){
+            state := getblock4
+        }
+        is(getblock4){
+            state := fence_axi
+        }
+        is(fence_axi){
+            when(io.axi.wdone){state := fence_axi_done}
+        }
+        is(fence_axi_done){
+            when(fence_reg === Fill(IndexWidth + 1, 1.U(1.W))){state := idle}
+            .otherwise{state := getblock3}
         }
     }
 
@@ -298,6 +319,7 @@ class DCache extends Module with CacheParameters{
 
     val axi_wbuffer = RegInit(0.U(CacheLineWidth.W))
     val axi_rbuffer = RegInit(0.U(CacheLineWidth.W))
+    val fence_buffer = RegInit(0.U(CacheLineWidth.W))
 
     def mask8_to_64(wm:UInt):UInt = Cat(Fill(8,wm(7)),Fill(8,wm(6)),Fill(8,wm(5)),Fill(8,wm(4)),Fill(8,wm(3)),Fill(8,wm(2)),Fill(8,wm(1)),Fill(8,wm(0)))
     
@@ -400,6 +422,37 @@ class DCache extends Module with CacheParameters{
             when(op_stay && updateway_stay === "b10".U){d2(index_addr_stay) := true.B}
 
             output_way      := updateway_stay 
+        }
+        // fence
+        is(fence_start){
+            fence_reg := 0.U
+        }
+        is(getblock3){
+            block1.addr     := fence_cnt
+            block1.cen      := true.B
+            block2.addr     := fence_cnt
+            block2.cen      := true.B
+        }
+        is(getblock4){
+            fence_buffer    := Mux(fence_way === 0.U, block1.rdata, block2.rdata)
+        }
+        is(fence_axi){
+            io.axi.weq      := true.B
+            io.axi.waddr    := Cat(Mux(fence_way === 0.U, tag1(fence_cnt), tag2(fence_cnt)), fence_cnt, 0.U(OffsetWidth.W))
+            io.axi.wdata    := fence_buffer
+        }
+        is(fence_axi_done){
+            fence_reg := fence_reg + 1.U
+            when(fence_way === 0.U){
+                v1(fence_cnt)   := false.B
+                d1(fence_cnt)   := false.B
+            }
+            .otherwise{
+                v2(fence_cnt)   := false.B
+                d2(fence_cnt)   := false.B
+            }
+
+            io.fence.done   := fence_reg === Fill(IndexWidth + 1, 1.U(1.W))
         }
     }
     // -----------------------------------------------------------------------------

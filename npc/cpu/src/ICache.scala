@@ -242,7 +242,6 @@ class ICache extends Module with CacheParameters{
         val axi     = new ICacheAxiIO
         val fence   = Flipped(new FenceIO)
     })
-    io.fence.done := false.B
 
     // addr
     val tag_addr    = io.imem.addr(OffsetWidth + IndexWidth + TagWidth - 1, OffsetWidth + IndexWidth)
@@ -261,12 +260,16 @@ class ICache extends Module with CacheParameters{
     val block2  = sram2.io
     
     //state machine define
-    val idle :: fetch :: update :: update_done :: Nil = Enum(4)
+    val idle :: fetch :: update :: update_done :: fence_start :: fence_clean :: Nil = Enum(6)
     val state = RegInit(idle)
     val miss  = Wire(Bool())
+    val fence_reg = RegInit(0.U((1 + IndexWidth).W))    // 添加一位用于记录正在情况哪一路
+    val fence_way = fence_reg(IndexWidth)
+    val fence_cnt = fence_reg(IndexWidth - 1, 0)
 
     switch(state){
         is(idle){
+            when(io.fence.req){state := fence_start}
             when(miss && io.imem.en){state := fetch}
         }
         is(fetch){
@@ -277,6 +280,14 @@ class ICache extends Module with CacheParameters{
         }
         is(update_done){
             state := idle
+        }
+        // fence
+        is(fence_start){
+            state := fence_clean
+        }
+        is(fence_clean){
+            when(fence_reg === Fill(IndexWidth + 1, 1.U(1.W))){state := idle}
+            .otherwise{state := fence_clean}
         }
     }
 
@@ -350,6 +361,12 @@ class ICache extends Module with CacheParameters{
         tag2(index_addr_stay) := tag_addr_stay
         v2(index_addr_stay)   := true.B
     }
+    when(state === fence_clean && fence_way === 0.U){
+        v1(fence_cnt) := false.B
+    }
+    when(state === fence_clean && fence_way === 1.U){
+        v2(fence_cnt) := false.B
+    }
 
     // choose output way
     when(state === idle && io.imem.en){
@@ -358,4 +375,15 @@ class ICache extends Module with CacheParameters{
     .elsewhen(state === update){
         output_way := Cat(updateway2, updateway1)
     }
+
+    // fence reg
+    when(state === fence_start){fence_reg := 0.U}
+    .elsewhen(state === fence_clean){fence_reg := fence_reg + 1.U}
+    
+    // fence output
+    when(state === fence_clean){
+        io.fence.done := fence_reg === Fill(IndexWidth + 1, 1.U(1.W))
+    }
+    .otherwise{io.fence.done := false.B}
+    
 }

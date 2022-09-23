@@ -152,7 +152,7 @@ class Core extends Module{
     fence.io.go := pipeline.io.id_fencei && !pipeline.io.ie_valid && !pipeline.io.mem_valid && !pipeline.io.wb_valid
     val fence_running = !fence.io.ok    
 
-    pipeline.io.stall_id    := pipeline.io.rfconflict || imem_not_ok || env_wait
+    pipeline.io.stall_id    := pipeline.io.rfconflict || imem_not_ok || env_wait || fence_wait || fence_running
     pipeline.io.stall_ie    := mu.io.stall || du.io.stall
     pipeline.io.stall_mem   := false.B
     pipeline.io.stall_wb    := dmem_not_ok

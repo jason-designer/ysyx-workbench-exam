@@ -23,7 +23,7 @@ class Fence extends Module{
             when(io.go){state := run_fence}
         }
         is(run_fence){          // 在这个状态会输出ok，让fence指令流掉。如果不留掉的话，icache的v被置为0，会导致重复取fence指令。
-            state := dcache
+            state := dcache     // 替换sram后，这个地方不需要输出ok
         }
         is(dcache){
             when(io.dfence.done){state := icache}
@@ -36,7 +36,7 @@ class Fence extends Module{
         }
     }
     // output
-    io.ok := (state === idle && io.go === false.B) || state === done || state === run_fence
+    io.ok := (state === idle && io.go === false.B) || state === done //|| state === run_fence
     io.dfence.req := state === dcache
     io.ifence.req := state === icache
 }
