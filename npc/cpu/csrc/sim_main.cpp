@@ -14,7 +14,7 @@
 #define DIFFTEST
 #define TRACE_WAVE
 #define ITRACE
-// #define MTRACE 
+#define MTRACE 
 #define DTRACE
 
 #define SIM_RESET_TIME 2
@@ -184,7 +184,7 @@ Sdb_end_info* sim_main(int argc, char** argv, char* tfp_file, char* diff_file, c
                 // void dmem_trace();
                 // dmem_trace();
                 Dmem_Info& d = dmem_info;
-                printf("%d %d %llx %08lx %d %016lx %016lx %d %lx %016lx %x\n",sim_time,d.valid, d.pc, d.inst, d.ren, d.raddr, d.rdata, d.wen, d.waddr, d.wdata, d.wmask);
+                printf("%d %d %llx %08lx %d %016lx %016lx %d %lx %016lx %02x\n",sim_time,d.valid, d.pc, d.inst, d.ren, d.raddr, d.rdata, d.wen, d.waddr, d.wdata, d.wmask);
 
             }
             #endif

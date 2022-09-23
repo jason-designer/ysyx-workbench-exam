@@ -105,14 +105,14 @@ class SRam_2k extends Module{
     sram0.io.CLK    := clock
     sram0.io.A      := io.addr
     sram0.io.CEN    := false.B              // ysyx给的sram的逻辑是反的
-    sram0.io.WEN    := ~io.wen              // ysyx给的sram的逻辑是反的
+    sram0.io.WEN    := !(io.wen && io.cen)  // ysyx给的sram的逻辑是反的
     sram0.io.BWEN   := ~io.wmask(127, 0)    // ysyx给的sram的逻辑是反的
     sram0.io.D      := io.wdata(127, 0)
 
     sram1.io.CLK    := clock
     sram1.io.A      := io.addr
     sram1.io.CEN    := false.B              // ysyx给的sram的逻辑是反的
-    sram1.io.WEN    := ~io.wen              // ysyx给的sram的逻辑是反的
+    sram1.io.WEN    := !(io.wen && io.cen)  // ysyx给的sram的逻辑是反的
     sram1.io.BWEN   := ~io.wmask(255, 128)  // ysyx给的sram的逻辑是反的
     sram1.io.D      := io.wdata(255, 128)
 
@@ -291,14 +291,12 @@ class ICache extends Module with CacheParameters{
     val hit1    = tag_addr === tag1(index_addr) && v1(index_addr) === true.B
     val hit2    = tag_addr === tag2(index_addr) && v2(index_addr) === true.B
     miss        := !(hit1 || hit2)
+    val output_way = RegInit(0.U(2.W))
 
-
-    val hit1_stay = tag_addr_stay === tag1(index_addr_stay) && v1(index_addr_stay) === true.B
-    val hit2_stay = tag_addr_stay === tag2(index_addr_stay) && v2(index_addr_stay) === true.B
     val data1   = (block1.rdata >> (offset_addr_stay << 3))(31, 0)
     val data2   = (block2.rdata >> (offset_addr_stay << 3))(31, 0)
-    val data    = Mux(hit2_stay, data2, Mux(hit1_stay, data1, 0.U))                     // 两个都hit就随便取一个,按理说不会两个都hit
-
+    val data = Mux(output_way === "b10".U, data2, Mux(output_way === "b01".U, data1, 0.U))
+    
 
     // cache output
     io.imem.data := Mux(state === idle, data, 0.U)
@@ -317,7 +315,7 @@ class ICache extends Module with CacheParameters{
     }
     
     // choose which way to update
-    val age = Cat(age2(addr_stay), age1(addr_stay))
+    val age = Cat(age2(index_addr_stay), age1(index_addr_stay))
     val updateway2 = age === "b01".U    
     val updateway1 = !updateway2        // 特殊情况都默认换掉way1
 
@@ -342,6 +340,7 @@ class ICache extends Module with CacheParameters{
     block2.wen  := state === update && updateway2
     block2.wdata := axi_buffer
     block2.wmask := Fill(CacheLineWidth, 1.U)
+
     // v and tag
     when(state === update && updateway1){
         tag1(index_addr_stay) := tag_addr_stay
@@ -350,5 +349,13 @@ class ICache extends Module with CacheParameters{
     when(state === update && updateway2){
         tag2(index_addr_stay) := tag_addr_stay
         v2(index_addr_stay)   := true.B
+    }
+
+    // choose output way
+    when(state === idle && io.imem.en){
+        output_way := Cat(hit2, hit1)
+    }
+    .elsewhen(state === update){
+        output_way := Cat(updateway2, updateway1)
     }
 }
