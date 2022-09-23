@@ -14,7 +14,7 @@
 #define DIFFTEST
 #define TRACE_WAVE
 #define ITRACE
-#define MTRACE 
+// #define MTRACE 
 #define DTRACE
 
 #define SIM_RESET_TIME 2

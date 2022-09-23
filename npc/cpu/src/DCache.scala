@@ -191,6 +191,11 @@ class DCache extends Module with CacheParameters{
         val dmem    = new DCacheIO
         val axi     = new DCacheAxiIO
         val fence   = Flipped(new FenceIO)
+
+        val sram0   = new SRamIO
+        val sram1   = new SRamIO
+        val sram2   = new SRamIO
+        val sram3   = new SRamIO
     })
     // addr
     val addr = io.dmem.addr & "hfffffffffffffff8".U
@@ -208,6 +213,11 @@ class DCache extends Module with CacheParameters{
     val age2    = RegInit(VecInit(Seq.fill(CacheLineNum)(false.B)))
     val tag2    = RegInit(VecInit(Seq.fill(CacheLineNum)(0.U(TagWidth.W))))
     val block2  = Module(new SRam_2k).io
+
+    block1.sram0 <> io.sram0
+    block1.sram1 <> io.sram1
+    block2.sram0 <> io.sram2
+    block2.sram1 <> io.sram3
     
     //state machine define
     val idle :: getblock1 :: getblock2 :: writeback :: fetch :: update :: update_done :: fence_start :: getblock3 :: getblock4 :: fence_axi :: fence_axi_done :: Nil = Enum(12)

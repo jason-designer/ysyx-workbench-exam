@@ -109,8 +109,24 @@ class SimTop extends Module{
     })
 
     val core = Module(new Core)
-    /************************* Core-SRam *********************/
 
+    val sram0 = Module(new SRam_1k)
+    val sram1 = Module(new SRam_1k)
+    val sram2 = Module(new SRam_1k)
+    val sram3 = Module(new SRam_1k)
+    val sram4 = Module(new SRam_1k)
+    val sram5 = Module(new SRam_1k)
+    val sram6 = Module(new SRam_1k)
+    val sram7 = Module(new SRam_1k)
+    /************************* Core-SRam *********************/
+    core.io.sram0 <> sram0.io
+    core.io.sram1 <> sram1.io
+    core.io.sram2 <> sram2.io
+    core.io.sram3 <> sram3.io
+    core.io.sram4 <> sram4.io
+    core.io.sram5 <> sram5.io
+    core.io.sram6 <> sram6.io
+    core.io.sram7 <> sram7.io
     
     /************************ SoC-AXI *************************/
     core.io.axi.aw.ready    := io.master.awready

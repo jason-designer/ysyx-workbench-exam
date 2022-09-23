@@ -41,7 +41,7 @@ class SRamIO extends Bundle{
     val rdata   = Input(UInt(128.W))
 }
 
-class SRam_1k extends BlackBox with HasBlackBoxInline{
+class SRam extends BlackBox with HasBlackBoxInline{
     val io = IO(new Bundle{
         val CLK     = Input(Clock())
         val A       = Input(UInt(6.W))
@@ -51,11 +51,10 @@ class SRam_1k extends BlackBox with HasBlackBoxInline{
         val D       = Input(UInt(128.W))
         val Q       = Output(UInt(128.W))
     })
-
-    setInline("SRam_1k.v",
+    setInline("SRam.v",
             """
            |
-           |     module SRam_1k(
+           |     module SRam(
            |        Q, CLK, CEN, WEN, BWEN, A, D
            |     );
            |     parameter Bits = 128;
@@ -88,37 +87,46 @@ class SRam_1k extends BlackBox with HasBlackBoxInline{
             """.stripMargin)
 }
 
-class SRamIO_2k extends Bundle{
-    val addr    = Output(UInt(6.W))
-    val cen     = Output(Bool())
-    val wen     = Output(Bool())
-    val wmask   = Output(UInt(256.W))
-    val wdata   = Output(UInt(256.W))
-    val rdata   = Input(UInt(256.W))
+class SRam_1k extends Module{
+    val io = IO(Flipped(new SRamIO))
+    val sram = Module(new SRam)
+    sram.io.CLK     := clock
+    sram.io.A       := io.addr
+    sram.io.CEN     := io.cen
+    sram.io.WEN     := io.wen
+    sram.io.BWEN    := io.wmask
+    sram.io.D       := io.wdata
+    io.rdata        := sram.io.Q 
 }
 
 class SRam_2k extends Module{
-    val io = IO(Flipped(new SRamIO_2k))
+    val io = IO(new Bundle{
+        val addr    = Input(UInt(6.W))
+        val cen     = Input(Bool())
+        val wen     = Input(Bool())
+        val wmask   = Input(UInt(256.W))
+        val wdata   = Input(UInt(256.W))
+        val rdata   = Output(UInt(256.W))
 
-    val sram0 = Module(new SRam_1k)
-    val sram1 = Module(new SRam_1k)
-    sram0.io.CLK    := clock
-    sram0.io.A      := io.addr
-    sram0.io.CEN    := false.B              // ysyx给的sram的逻辑是反的
-    sram0.io.WEN    := !(io.wen && io.cen)  // ysyx给的sram的逻辑是反的
-    sram0.io.BWEN   := ~io.wmask(127, 0)    // ysyx给的sram的逻辑是反的
-    sram0.io.D      := io.wdata(127, 0)
+        val sram0   = new SRamIO
+        val sram1   = new SRamIO
+    })
 
-    sram1.io.CLK    := clock
-    sram1.io.A      := io.addr
-    sram1.io.CEN    := false.B              // ysyx给的sram的逻辑是反的
-    sram1.io.WEN    := !(io.wen && io.cen)  // ysyx给的sram的逻辑是反的
-    sram1.io.BWEN   := ~io.wmask(255, 128)  // ysyx给的sram的逻辑是反的
-    sram1.io.D      := io.wdata(255, 128)
+    io.sram0.addr   := io.addr
+    io.sram0.cen    := false.B              // ysyx给的sram的逻辑是反的
+    io.sram0.wen    := !(io.wen && io.cen)  // ysyx给的sram的逻辑是反的
+    io.sram0.wmask  := ~io.wmask(127, 0)    // ysyx给的sram的逻辑是反的
+    io.sram0.wdata  := io.wdata(127, 0)
+
+    io.sram1.addr   := io.addr
+    io.sram1.cen    := false.B              // ysyx给的sram的逻辑是反的
+    io.sram1.wen    := !(io.wen && io.cen)  // ysyx给的sram的逻辑是反的
+    io.sram1.wmask  := ~io.wmask(255, 128)  // ysyx给的sram的逻辑是反的
+    io.sram1.wdata  := io.wdata(255, 128)
 
 
     // 读保持功能
-    val rdata = Cat(sram1.io.Q, sram0.io.Q)
+    val rdata = Cat(io.sram1.rdata, io.sram0.rdata)
     val data_stay = RegInit(0.U(256.W))
 
     val idle :: stop :: stay :: Nil = Enum(3)
@@ -241,6 +249,11 @@ class ICache extends Module with CacheParameters{
         val imem    = new ICacheIO
         val axi     = new ICacheAxiIO
         val fence   = Flipped(new FenceIO)
+
+        val sram0   = new SRamIO
+        val sram1   = new SRamIO
+        val sram2   = new SRamIO
+        val sram3   = new SRamIO
     })
 
     // addr
@@ -251,13 +264,16 @@ class ICache extends Module with CacheParameters{
     val v1      = RegInit(VecInit(Seq.fill(CacheLineNum)(false.B)))
     val age1    = RegInit(VecInit(Seq.fill(CacheLineNum)(false.B)))
     val tag1    = RegInit(VecInit(Seq.fill(CacheLineNum)(0.U(TagWidth.W))))
-    val sram1   = Module(new SRam_2k)
-    val block1  = sram1.io
+    val block1  = Module(new SRam_2k).io
     val v2      = RegInit(VecInit(Seq.fill(CacheLineNum)(false.B)))
     val age2    = RegInit(VecInit(Seq.fill(CacheLineNum)(false.B)))
     val tag2    = RegInit(VecInit(Seq.fill(CacheLineNum)(0.U(TagWidth.W))))
-    val sram2   = Module(new SRam_2k)
-    val block2  = sram2.io
+    val block2  = Module(new SRam_2k).io
+
+    block1.sram0 <> io.sram0
+    block1.sram1 <> io.sram1
+    block2.sram0 <> io.sram2
+    block2.sram1 <> io.sram3
     
     //state machine define
     val idle :: fetch :: update :: update_done :: fence_start :: fence_clean :: Nil = Enum(6)

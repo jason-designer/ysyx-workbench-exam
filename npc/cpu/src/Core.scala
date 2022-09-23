@@ -122,6 +122,15 @@ import Instructions._
 class Core extends Module{
     val io = IO(new Bundle{
         val axi = new AxiIO
+
+        val sram0   = new SRamIO
+        val sram1   = new SRamIO
+        val sram2   = new SRamIO
+        val sram3   = new SRamIO
+        val sram4   = new SRamIO
+        val sram5   = new SRamIO
+        val sram6   = new SRamIO
+        val sram7   = new SRamIO
     })
     val pipeline        = Module(new Pipeline)
     val rfu             = Module(new RegFile)
@@ -204,6 +213,16 @@ class Core extends Module{
     // fence
     icache.io.fence <> fence.io.ifence
     dcache.io.fence <> fence.io.dfence
+
+    // cache <--> sram
+    icache.io.sram0 <> io.sram0
+    icache.io.sram1 <> io.sram1
+    icache.io.sram2 <> io.sram2
+    icache.io.sram3 <> io.sram3
+    dcache.io.sram0 <> io.sram4
+    dcache.io.sram1 <> io.sram5
+    dcache.io.sram2 <> io.sram6
+    dcache.io.sram3 <> io.sram7
 
     // pipeline <--> memory <--> axi
     /******************* access memory *****************
