@@ -163,5 +163,18 @@ update_nanos_lite:
 	cp ../nanos-lite/build/nanos-lite-riscv64-npc.txt bin/nanos_lite/
 
 
+# soc ------------------------------------------------
+YSYXSOC_DIR = /home/zgs/project/ysyx4soc/ysyxSoC
+
+verilogsoc:
+	make verilog
+	cp $(VSRC_DIR)/SimTopSoc.v $(VSRC_DIR)/ysyx_040596.v
+	perl -p -i -e "s/ysyx_040596_SimTopSoc/ysyx_040596/g" $(VSRC_DIR)/ysyx_040596.v
+	cp $(VSRC_DIR)/ysyx_040596.v $(YSYXSOC_DIR)/ysyx/soc/
+	
+
+# ----------------------------------------------------
+
+
 .PHONY: test verilog help compile bsp reformat checkformat clean sim run gdb wave update_am_test update_nanos_lite
 include ../Makefile

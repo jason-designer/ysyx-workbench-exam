@@ -2,6 +2,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental._
 
+
 class RegFile extends Module{
   val io = IO(new Bundle{
     val rs1_addr = Input(UInt(5.W))
@@ -12,16 +13,29 @@ class RegFile extends Module{
     val rd_addr  = Input(UInt(5.W))
     val rd_data  = Input(UInt(64.W))
   })
-  val rf = Module(new RegFileBlackBox)
-  rf.io.clk       := clock
-  rf.io.reset     := reset
-  rf.io.rs1_addr  := io.rs1_addr 
-  rf.io.rs2_addr  := io.rs2_addr
-  io.rs1_data     := rf.io.rs1_data
-  io.rs2_data     := rf.io.rs2_data
-  rf.io.rd_en     := io.rd_en  
-  rf.io.rd_addr   := io.rd_addr
-  rf.io.rd_data   := io.rd_data 
+
+  // regfile for npc
+  if(!Config.soc){
+    val rf = Module(new RegFileBlackBox)
+    rf.io.clk       := clock
+    rf.io.reset     := reset
+    rf.io.rs1_addr  := io.rs1_addr 
+    rf.io.rs2_addr  := io.rs2_addr
+    io.rs1_data     := rf.io.rs1_data
+    io.rs2_data     := rf.io.rs2_data
+    rf.io.rd_en     := io.rd_en  
+    rf.io.rd_addr   := io.rd_addr
+    rf.io.rd_data   := io.rd_data 
+  }
+  // regfile for soc
+  else{
+    val rf = RegInit(VecInit(Seq.fill(32)(0.U(64.W))))
+    when (io.rd_en && (io.rd_addr =/= 0.U)) {
+      rf(io.rd_addr) := io.rd_data;
+    }
+    io.rs1_data := Mux((io.rs1_addr =/= 0.U), rf(io.rs1_addr), 0.U)
+    io.rs2_data := Mux((io.rs2_addr =/= 0.U), rf(io.rs2_addr), 0.U)
+  }
 }
 
 class RegFileBlackBox extends BlackBox with HasBlackBoxInline{
@@ -72,29 +86,3 @@ class RegFileBlackBox extends BlackBox with HasBlackBoxInline{
            |
             """.stripMargin)
 }
-
-
-// class RegFile extends Module {
-//   val io = IO(new Bundle{
-//     val rs1_addr = Input(UInt(5.W))
-//     val rs2_addr = Input(UInt(5.W))
-//     val rs1_data = Output(UInt(64.W))
-//     val rs2_data = Output(UInt(64.W))
-//     val rd_addr = Input(UInt(5.W))
-//     val rd_data = Input(UInt(64.W))
-//     val rd_en = Input(Bool())
-//   })
-
-//   val rf = RegInit(VecInit(Seq.fill(32)(0.U(64.W))))
-
-//   when (io.rd_en && (io.rd_addr =/= 0.U)) {
-//     rf(io.rd_addr) := io.rd_data;
-//   }
-
-//   io.rs1_data := Mux((io.rs1_addr =/= 0.U), rf(io.rs1_addr), 0.U)
-//   io.rs2_data := Mux((io.rs2_addr =/= 0.U), rf(io.rs2_addr), 0.U)
-
-//   /* ------------------------------------ use difftest ---------------------------------------- */
-//   BoringUtils.addSource(rf(10), "rf_a0")
-  
-// }

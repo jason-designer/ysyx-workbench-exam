@@ -133,7 +133,14 @@ class Core extends Module{
         val sram7   = new SRamIO
     })
     val pipeline        = Module(new Pipeline)
-    val rfu             = Module(new RegFile)
+
+    val rfu = Module(new RegFile)
+    // val rfu             = Config.soc match {
+    //                                             case true   => Module(new RegFileSoc)
+    //                                             case false  => Module(new RegFile)
+    //                                         }
+
+
     val csru            = Module(new Csr)
     val fence           = Module(new Fence)
     // mul/div
@@ -267,57 +274,46 @@ class Core extends Module{
     axi.io.out.b  <> io.axi.b 
        
     /* ------------------------------------ use difftest ---------------------------------------- */
-    val commit      = pipeline.io.commit
-    val pc          = pipeline.io.commit_pc
-    val inst        = pipeline.io.commit_inst
-    
-    val putch       = inst === "h0000007b".U
-    val read_mcycle = (inst & "hfff0307f".U) === "hb0002073".U 
-    val rtthread_test_skip =  pc === "h80005360".U // 读mip
-    val skip = putch || read_mcycle || pipeline.io.commit_clint || rtthread_test_skip
-    // halt
-    val halt = Module(new Halt)
-    halt.io.clk   := clock
-    halt.io.reset := reset
-    halt.io.halt  := inst === EBREAK || inst === "h0000006b".U 
-    // itrace
-    val itrace = Module(new ITrace)
-    itrace.io.clk       := clock
-    itrace.io.reset     := reset
-    itrace.io.commit    := commit
-    itrace.io.pc        := pc
-    itrace.io.inst      := inst
-    itrace.io.ren       := pipeline.io.commit_dmem_ren
-    itrace.io.raddr     := pipeline.io.commit_dmem_raddr
-    itrace.io.wen       := pipeline.io.commit_dmem_wen
-    itrace.io.waddr     := pipeline.io.commit_dmem_waddr
-    // mtrace
-    val mtrace = Module(new MTrace)
-    mtrace.io.clk   := clock
-    mtrace.io.reset := reset
-    mtrace.io.valid := commit
-    mtrace.io.pc    := pc
-    mtrace.io.inst  := inst
-    mtrace.io.ren   := pipeline.io.commit_dmem_ren
-    mtrace.io.raddr := pipeline.io.commit_dmem_raddr
-    mtrace.io.rdata := pipeline.io.commit_dmem_rdata
-    mtrace.io.wen   := pipeline.io.commit_dmem_wen
-    mtrace.io.waddr := pipeline.io.commit_dmem_waddr
-    mtrace.io.wdata := pipeline.io.commit_dmem_wdata
-    mtrace.io.wmask := pipeline.io.commit_dmem_wmask
-    // val mtrace = Module(new MTrace)
-    // mtrace.io.clk   := clock
-    // mtrace.io.reset := reset
-    // mtrace.io.valid := pipeline.io.mem_valid
-    // mtrace.io.pc    := pipeline.io.mem_pc
-    // mtrace.io.inst  := pipeline.io.mem_inst
-    // mtrace.io.ren   := pipeline.io.dmem.ren
-    // mtrace.io.raddr := pipeline.io.dmem.raddr
-    // mtrace.io.rdata := pipeline.io.dmem.rdata
-    // mtrace.io.wen   := pipeline.io.dmem.wen
-    // mtrace.io.waddr := pipeline.io.dmem.waddr
-    // mtrace.io.wdata := pipeline.io.dmem.wdata
-    // mtrace.io.wmask := pipeline.io.dmem.wmask
+    if(!Config.soc){
+        val commit      = pipeline.io.commit
+        val pc          = pipeline.io.commit_pc
+        val inst        = pipeline.io.commit_inst
+        
+        val putch       = inst === "h0000007b".U
+        val read_mcycle = (inst & "hfff0307f".U) === "hb0002073".U 
+        val rtthread_test_skip =  pc === "h80005360".U // 读mip
+        val skip = putch || read_mcycle || pipeline.io.commit_clint || rtthread_test_skip
+        // halt
+        val halt = Module(new Halt)
+        halt.io.clk   := clock
+        halt.io.reset := reset
+        halt.io.halt  := inst === EBREAK || inst === "h0000006b".U 
+        // itrace
+        val itrace = Module(new ITrace)
+        itrace.io.clk       := clock
+        itrace.io.reset     := reset
+        itrace.io.commit    := commit
+        itrace.io.pc        := pc
+        itrace.io.inst      := inst
+        itrace.io.ren       := pipeline.io.commit_dmem_ren
+        itrace.io.raddr     := pipeline.io.commit_dmem_raddr
+        itrace.io.wen       := pipeline.io.commit_dmem_wen
+        itrace.io.waddr     := pipeline.io.commit_dmem_waddr
+        // mtrace
+        val mtrace = Module(new MTrace)
+        mtrace.io.clk   := clock
+        mtrace.io.reset := reset
+        mtrace.io.valid := commit
+        mtrace.io.pc    := pc
+        mtrace.io.inst  := inst
+        mtrace.io.ren   := pipeline.io.commit_dmem_ren
+        mtrace.io.raddr := pipeline.io.commit_dmem_raddr
+        mtrace.io.rdata := pipeline.io.commit_dmem_rdata
+        mtrace.io.wen   := pipeline.io.commit_dmem_wen
+        mtrace.io.waddr := pipeline.io.commit_dmem_waddr
+        mtrace.io.wdata := pipeline.io.commit_dmem_wdata
+        mtrace.io.wmask := pipeline.io.commit_dmem_wmask
+    }
 }
 
 
