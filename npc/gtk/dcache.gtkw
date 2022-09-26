@@ -1,0 +1,74 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Sep 23 07:39:34 2022
+[*]
+[dumpfile] "/home/zgs/project/ysyx-workbench/npc/build/waveform/sim_main.vcd"
+[dumpfile_mtime] "Fri Sep 23 07:38:10 2022"
+[dumpfile_size] 208014
+[savefile] "/home/zgs/project/ysyx-workbench/npc/build/waveform/dcache.gtkw"
+[timestart] 3422
+[size] 1651 869
+[pos] -7 -21
+*-3.000000 3438 3036 3644 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.SimTop.
+[treeopen] TOP.SimTop.core.
+[treeopen] TOP.SimTop.core.dcache.
+[treeopen] TOP.SimTop.core.dcache.SRam_2k.
+[sst_width] 288
+[signals_width] 441
+[sst_expanded] 1
+[sst_vpaned_height] 246
+@28
+TOP.SimTop.core.dcache.clock
+TOP.SimTop.core.pipeline.memreg.io_out_valid
+@22
+TOP.SimTop.core.pipeline.memreg.io_out_pc[63:0]
+TOP.SimTop.core.pipeline.memreg.io_out_inst[31:0]
+@200
+-
+@28
+[color] 2
+TOP.SimTop.core.dcache.io_dmem_en
+[color] 2
+TOP.SimTop.core.dcache.io_dmem_op
+@22
+[color] 2
+TOP.SimTop.core.dcache.io_dmem_addr[63:0]
+[color] 2
+TOP.SimTop.core.dcache.io_dmem_wdata[63:0]
+[color] 2
+TOP.SimTop.core.dcache.io_dmem_wmask[7:0]
+[color] 2
+TOP.SimTop.core.dcache.io_dmem_rdata[63:0]
+@200
+-
+@22
+TOP.SimTop.core.dcache.tag_addr[52:0]
+TOP.SimTop.core.dcache.index_addr[5:0]
+@200
+-
+@28
+TOP.SimTop.core.dcache.v1_56
+TOP.SimTop.core.dcache.d1_56
+@22
+TOP.SimTop.core.dcache.tag1_56[52:0]
+@200
+-
+@28
+[color] 2
+TOP.SimTop.core.dcache.state[2:0]
+@200
+-
+@22
+TOP.SimTop.core.dcache.SRam_2k_io_addr[5:0]
+@28
+TOP.SimTop.core.dcache.SRam_2k_io_cen
+TOP.SimTop.core.dcache.SRam_2k_io_wen
+@22
+TOP.SimTop.core.dcache.SRam_2k_io_wdata[255:0]
+TOP.SimTop.core.dcache.SRam_2k_io_wmask[255:0]
+@23
+TOP.SimTop.core.dcache.SRam_2k_io_rdata[255:0]
+[pattern_trace] 1
+[pattern_trace] 0

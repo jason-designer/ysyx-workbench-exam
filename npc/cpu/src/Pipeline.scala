@@ -399,7 +399,7 @@ class Pipeline extends Module{
 
     val dmem_read_clint  = io.dmem.ren && (io.dmem.raddr === "h0200bff8".U || io.dmem.raddr === "h02004000".U)
     val dmem_write_clint = io.dmem.wen && (io.dmem.waddr === "h0200bff8".U || io.dmem.waddr === "h02004000".U)
-    io.commit_clint := commit_valid && RegNext(dmem_read_clint || dmem_write_clint)
+    io.commit_clint := commit_valid && RegNext(dmem_read_clint || dmem_write_clint, false.B)
 
     io.commit_dmem_ren      := RegEnable(io.dmem.ren, false.B, wbreg.io.en)
     io.commit_dmem_raddr    := RegEnable(io.dmem.raddr, 0.U(64.W), wbreg.io.en)

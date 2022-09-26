@@ -135,11 +135,6 @@ class Core extends Module{
     val pipeline        = Module(new Pipeline)
 
     val rfu = Module(new RegFile)
-    // val rfu             = Config.soc match {
-    //                                             case true   => Module(new RegFileSoc)
-    //                                             case false  => Module(new RegFile)
-    //                                         }
-
 
     val csru            = Module(new Csr)
     val fence           = Module(new Fence)

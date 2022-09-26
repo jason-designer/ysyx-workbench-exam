@@ -19,7 +19,9 @@ class IDReg extends Module {
         val inst    = Output(UInt(32.W))
     })
     val valid   = RegEnable(io.in.valid, false.B, io.en)
-    val pc      = RegEnable(io.in.pc, "h7ffffffc".U(64.W), io.en)
+
+    val reset_addr = if(Config.soc){"h2ffffffc".U(64.W)}else{"h7ffffffc".U(64.W)}
+    val pc      = RegEnable(io.in.pc, reset_addr, io.en)
     // val pc = Config.soc match{
     //     case true   => RegEnable(io.in.pc, "h2ffffffc".U(64.W), io.en)
     //     case false  => RegEnable(io.in.pc, "h7ffffffc".U(64.W), io.en)

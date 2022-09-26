@@ -1,18 +1,22 @@
 object Config{
-  val soc = true
+  var soc = false
 }
 
 
 object TopMain extends App {
-  val arg = if(Config.soc){
-    Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SimTopSoc()),
+  Config.soc = false
+
+  val arg = Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SimTop()))
+  (new chisel3.stage.ChiselStage).execute(args, arg)
+}
+
+
+object TopMainSoc extends App {
+  Config.soc = true
+  
+  val arg = Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SimTopSoc()),
     firrtl.stage.RunFirrtlTransformAnnotation(new AddModulePrefix()),
     ModulePrefixAnnotation("ysyx_040596_"))
-  }
-  else{
-    Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SimTop()))
-  }
-
   (new chisel3.stage.ChiselStage).execute(args, arg)
 }
 

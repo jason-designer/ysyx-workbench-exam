@@ -165,13 +165,19 @@ update_nanos_lite:
 
 # soc ------------------------------------------------
 YSYXSOC_DIR = /home/zgs/project/ysyx4soc/ysyxSoC
+SOC_VSRC_DIR = $(BUILD_DIR)/soc_vsrc
 
 verilogsoc:
-	make verilog
-	cp $(VSRC_DIR)/SimTopSoc.v $(VSRC_DIR)/ysyx_040596.v
-	perl -p -i -e "s/ysyx_040596_SimTopSoc/ysyx_040596/g" $(VSRC_DIR)/ysyx_040596.v
-	cp $(VSRC_DIR)/ysyx_040596.v $(YSYXSOC_DIR)/ysyx/soc/
-	
+	mkdir -p $(BUILD_DIR)
+	mkdir -p $(SOC_VSRC_DIR)
+	mill -i __.test.runMain TopMainSoc -td $(SOC_VSRC_DIR)
+
+	cp $(SOC_VSRC_DIR)/SimTopSoc.v $(SOC_VSRC_DIR)/ysyx_040596.v
+	perl -p -i -e "s/ysyx_040596_SimTopSoc/ysyx_040596/g" $(SOC_VSRC_DIR)/ysyx_040596.v
+	cp $(SOC_VSRC_DIR)/ysyx_040596.v $(YSYXSOC_DIR)/ysyx/soc/
+#	check reg reset	
+#   grep -rn "^ *reg " /home/zgs/project/ysyx-workbench/npc/build/soc_vsrc/SimTopSoc.fir | grep -v "reset =>"
+
 
 # ----------------------------------------------------
 

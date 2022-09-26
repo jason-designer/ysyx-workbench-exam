@@ -231,7 +231,7 @@ class DCache extends Module with CacheParameters{
     switch(state){
         is(idle){
             when(io.fence.req){state := fence_start}
-            when(miss && io.dmem.en){state := Mux(dirty, writeback, fetch)}
+            when(miss && io.dmem.en){state := Mux(dirty, getblock1, fetch)}
         }
         is(getblock1){
             state := getblock2
@@ -256,7 +256,10 @@ class DCache extends Module with CacheParameters{
             state := getblock3
         }
         is(getblock3){
-            state := getblock4
+            val v = Mux(fence_way, v2(fence_cnt), v1(fence_cnt))
+            val d = Mux(fence_way, d2(fence_cnt), d1(fence_cnt))
+            when(v && d){state := getblock4}        // 有效且脏的时候才写回
+            .otherwise{state := fence_axi_done}
         }
         is(getblock4){
             state := fence_axi
@@ -383,7 +386,7 @@ class DCache extends Module with CacheParameters{
         }
         is(writeback){
             io.axi.weq      := true.B
-            io.axi.waddr    := addr_stay & Cat(Fill(IndexWidth + TagWidth, 1.U(1.W)), 0.U(OffsetWidth.W))
+            io.axi.waddr    := Cat(Mux(updateway_stay === "b01".U, tag1(index_addr_stay), tag2(index_addr_stay)), index_addr_stay, 0.U(OffsetWidth.W)) 
             io.axi.wdata    := axi_wbuffer
         }
         is(fetch){
