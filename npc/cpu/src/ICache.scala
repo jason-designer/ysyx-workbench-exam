@@ -326,7 +326,7 @@ class ICache extends Module with CacheParameters{
     
 
     // cache output
-    io.imem.data := Mux(state === idle, data, 0.U)
+    io.imem.data := Mux(state === idle, data, 0.U) 
     io.imem.ok   := state === idle
 
     // AXI output
