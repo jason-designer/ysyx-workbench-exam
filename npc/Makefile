@@ -1,3 +1,4 @@
+NPC_HOME		= $(AM_HOME)/../npc
 BUILD_DIR 		= $(NPC_HOME)/build
 CSRC_DIR 		= $(NPC_HOME)/cpu/csrc
 VERILATOR_DIR	= $(BUILD_DIR)/verilator_obj
