@@ -13,3 +13,4 @@
 !init.sh
 /am-kernels
 /fceux-am
+!/doc/*
