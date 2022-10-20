@@ -31,7 +31,8 @@ class IDReg extends Module {
 
     io.imem.addr    := io.in.pc
     io.imem.en      := io.en 
-    io.inst         := io.imem.data
+    val icache_data_reset_mask = RegNext(true.B, false.B)   // make icache output 0.U after reset
+    io.inst         := Mux(icache_data_reset_mask, io.imem.data, 0.U)
 
     io.out.valid    := valid
     io.out.pc       := pc

@@ -12,12 +12,12 @@
 
 /***************** sdb config *******************/ 
 #define DIFFTEST
-// #define TRACE_WAVE
+#define TRACE_WAVE
 #define ITRACE
 // #define MTRACE 
 #define DTRACE
 
-#define SIM_RESET_TIME 2
+#define SIM_RESET_TIME 3
 /************************************************/
 #include "axi4.hpp"
 
