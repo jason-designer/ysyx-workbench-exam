@@ -1,4 +1,3 @@
-NPC_HOME		= $(AM_HOME)/../npc
 BUILD_DIR 		= $(NPC_HOME)/build
 CSRC_DIR 		= $(NPC_HOME)/cpu/csrc
 VERILATOR_DIR	= $(BUILD_DIR)/verilator_obj
@@ -72,6 +71,26 @@ ifeq ($(ALL),nanos)
 IMG_FILE = $(NPC_HOME)/bin/nanos_lite/nanos-lite-riscv64-npc.bin
 endif
 
+# 三期测试例程
+# nemu不支持time,interrupt,rtthread三期测试 !!!
+# 而且npc和nemu均没有实现0x7b指令，所以不会有东西打印出来，可以跑yield测测部分中断异常功能
+ifeq ($(ALL),hello)
+IMG_FILE = $(NPC_HOME)/bin/custom-output/hello/amtest-hello.bin
+endif
+ifeq ($(ALL),yield)
+IMG_FILE = $(NPC_HOME)/bin/custom-output/yield-test/amtest-yield-test.bin
+endif
+
+endif
+
+# 设置difftest文件
+# 如果是跑三期测试的hello或yield就用nemu，否则用spike作为difftest
+DIFF_TEST = $(DIFF_DIR)/riscv64-nemu-interpreter-so
+ifeq ($(ALL),hello)
+DIFF_TEST = $(DIFF_DIR)/riscv64-nemu-interpreter-so
+endif
+ifeq ($(ALL),yield)
+DIFF_TEST = $(DIFF_DIR)/riscv64-nemu-interpreter-so
 endif
 
 
@@ -89,8 +108,6 @@ LDFLAGS += -ldl
 LDFLAGS += -lSDL2 -lSDL2_image 
 LDFLAGS += $(shell llvm-config --libs)
 
-# DIFF_TEST = $(DIFF_DIR)/riscv64-nemu-interpreter-so
-DIFF_TEST = $(DIFF_DIR)/riscv64-spike-so
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
